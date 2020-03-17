@@ -2,7 +2,7 @@
 LINKPATH = #/usr/local/Cellar/glfw/3.3.2/lib 
 
 all:
-	clang++ main2.cpp ./src/glad.c ft_strsplit.c -I "./deps" -I "./include/" -l $(LINKPATH) glfw.3.3 -l GLEW.2.1.0 -framework OpenGL
+	clang++ -std=c++11 main2.cpp ./src/glad.c ft_strsplit.c -I "./deps" -I "./include/" -l $(LINKPATH) glfw.3.3 -l GLEW.2.1.0 -framework OpenGL
 
 
 #/System/Library/Frameworks/OpenGL.framework/
