@@ -12,10 +12,10 @@ void	processInput(GLFWwindow *window);
 void	cursor_position_callback(GLFWwindow* window, double x, double y);
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
 char	**ft_strsplit(char const *s, char c);
-
-const char *geometryShader = 
+/*
+const char *geometryShaderSource = 
 	"#version 330 core\n"
-	"layout (points) in;\n"
+	"layout (triangles) in;\n"
 	"layout (points, max_vertices = 1) out;\n"
 
 	"void main() {\n"
@@ -23,8 +23,8 @@ const char *geometryShader =
 		"EmitVertex();\n"
 		"EndPrimitive();\n"
 	"}\0";
-
-
+*/
+////////////////////////////////////////////////////////////////////////////////////
 	const char *vertexShaderSource =
 			"#version 330 core\n" //the version matches if GLSL matches the version of OpenGL
 // The vertex shader differs in its input, in that it receives its input straight from the vertex data. 
@@ -35,15 +35,20 @@ const char *geometryShader =
 //I think that every time the shader is called, the aPos is searched location = 0,
 //but the each time the stride is added to offset
 			"layout (location = 1) in vec3 color;\n"
-			"layout (location = 2) in vec3 normal;\n"
-			"out vec3 outColor;\n"
+			"layout (location = 2) in vec3 aNormal;\n"
+//comment to test if compiles geomShader
+//			"out vec3 outColor;\n"
 			"uniform mat4 P;\n"
-			"uniform mat4 M1;\n"
-			"uniform mat4 M;\n"
+			"uniform mat4 xRotate;\n"
+			"uniform mat4 yRotate;\n"
 			"uniform mat4 cR;\n"
 
 			"uniform vec4 p;\n"
 
+//for geomShader
+"out VS_OUT {\n" 
+"   vec4 normalEnd;\n"
+"} vs_out;\n"
 
 //need to get address from render loop
 //			"uniform float f;\n"
@@ -51,48 +56,98 @@ const char *geometryShader =
 			"void main()\n"
 			"{\n"
 //				"vec3 lightPos = vec3(20, 20, 20);\n"
+				"gl_Position =  P * (xRotate * yRotate * (vec4(aPos.x, aPos.y, aPos.z, 1) - p));\n"
+
+  //  "mat3 normalMatrix = mat3(transpose(inverse(view * model)));\n"
+//    "vs_out.normal = normalize(vec3(projection * vec4(normalMatrix * aNormal, 0.0)));\n"
+
+				"vs_out.normalEnd =  P * (xRotate * yRotate * (vec4(aPos + aNormal * 0.4, 1) - p))\n;"
+
+//				"vs_out.normal =  vec3(P * (xRotate * yRotate * (vec4(aNormal.x, aNormal.y, aNormal.z, 1) - p)));\n"
+
+
+
+//geomShader
+/*
+
+
 				"vec3 lightPos = vec3(p.x, p.y, p.z);\n"
 
 
 				"vec3 hitli = lightPos - aPos;\n"
 				"hitli = hitli / sqrt(hitli * hitli);\n"
 
-//				"float bright = normal * vec3(50, 50, 50);\n"
-				"gl_Position =  P * (M1 * M * (\/\*cR * \*\/vec4(aPos.x, aPos.y, aPos.z, 1) - p));\n"
-				"float brightness = dot(normal, hitli);\n"
+
+
+				"float brightness = dot(aNormal, hitli);\n"
 				"if (brightness >= 0)\n"
 					"outColor = (brightness) * color;\n"
 
 
 				"if (brightness < 0)\n"
 					"outColor = vec3(1, 0, 0);\n" // red
-				"if (normal == vec3(0, 0, 0))\n"
+				"if (aNormal == vec3(0, 0, 0))\n"
 					"outColor = vec3(0, 1, 0);\n" // green
 				"if (brightness > 1)\n"
 					"outColor = vec3(0, 0, 1);\n" // blue
 
-/*				"if (normal == vec3(0.3, 0.3, 0.3))\n"
-					"outColor = normal;\n"
-				"else\n"*/
-				//	"outColor = color;\n"
-
-
+*/
+//				"outColor = color;\n"
 			"}\0";
 
+
+
+
+
+///////////////////////////////////////////////////////////////////////////
+
+
+const char *geometryShaderSource = 
+"#version 330 core\n"
+"layout (triangles) in;\n"
+"layout (line_strip, max_vertices = 6) out;\n"
+
+"in VS_OUT {\n"
+"    vec4 normalEnd;\n"
+"} gs_in[];\n"
+
+//"const float MAGNITUDE = 0.004;\n"
+
+"void GenerateLine(int index)\n"
+"{\n"
+"    gl_Position = gl_in[index].gl_Position;\n"
+"    EmitVertex();\n"
+//"    gl_Position = gl_in[index].gl_Position + vec4(gs_in[index].normal, 0.0) * MAGNITUDE;\n"
+"    gl_Position = vec4(gs_in[index].normalEnd);\n"
+
+
+"    EmitVertex();\n"
+"    EndPrimitive();\n"
+"}\n"
+
+"void main()\n"
+"{\n"
+"    GenerateLine(0);\n"  
+"  GenerateLine(1);\n"
+"    GenerateLine(2);\n"
+"}\0";
+
+
+
+//////////////////////////////////////////////////////////////////////
 //Fragment shader:
 	const char *fragmentShaderSource =
 				"#version 330 core\n"
 				"out vec4 FragColor;\n" // has to have out vec4 type as output (but vec3 works too?)
-//				"uniform vec4 ourColor;\n
-//				"uniform mat4 M;\n"
-				"in vec3 outColor;\n"
+
+//geomShader
+//				"in vec3 outColor;\n"
 				"void main()\n"
 				"{\n"
-//				"	FragColor = vec4(0.1f, 0.4f, 1.0f, 1.0f);\n" //1.0f is opaque
-//				"	FragColor = ourColor;\n"
-//					"FragColor =  M * vec4(outColor, 1);\n"
+//geomShader
+//					"FragColor = vec4(outColor, 1);\n"
+					"FragColor = vec4(1, 1, 1, 1);\n"
 
-					"FragColor = vec4(outColor, 1);\n"
 
 				"}\0";
 
@@ -295,7 +350,7 @@ void	Model::pushBackNormals()
 	}
 
 }
-		
+
 
 static void	free_double_pointer(char **explode)
 {
@@ -309,7 +364,7 @@ static void	free_double_pointer(char **explode)
 	free(explode);
 }
 
-static void	loadVertices(char **explode, std::vector<float> &vertices)
+static void	loadVectors(std::vector<float> &vertices, char **explode)
 {
 	printf("after explode %s, %s, %s\n", explode[1], explode[2], explode[3]);
 
@@ -324,10 +379,10 @@ static void	loadVertices(char **explode, std::vector<float> &vertices)
 	    && b == 0) //no black points
 
 	{
-/*		r = rand() % 2;
-		g = rand() % 2;
-		b = rand() % 2;
-*/
+//		r = rand() % 2;
+//		g = rand() % 2;
+//		b = rand() % 2;
+
 		r = g = b = 1;
 	}
 	vertices.push_back(r);
@@ -402,9 +457,9 @@ void	Model::loadData(char *path)
 			explode = ft_strsplit(line.c_str(), ' ');
 //this will load colors to normals from loadVertices
 			if (strcmp(explode[0], "vn") == 0)
-				loadVertices(explode, normals);
+				loadVectors( normals, explode);
 			if (strcmp(explode[0], "v") == 0)
-				loadVertices(explode, vertices);
+				loadVectors(vertices, explode);
 			else if (strcmp(explode[0], "f") == 0)
 				loadIndices(explode, vertex_indices, normal_indices);
 			free_double_pointer(explode);
@@ -431,13 +486,12 @@ void	printOpbject(Model &myModel)
 		iter++;
 		i++;
 	}
-
 }
 
 class	Shader
 {
 	public:
-		Shader(const char *vertex, const char *fragment);
+		Shader(std::vector<const char *>shaders/*, const char *fragment*/);
 
 		char *vertexShader;
 		char *fragmentShader;
@@ -482,67 +536,25 @@ unsigned int	compileShader(const unsigned int &type, const char* &source)
 }
 
 
-Shader::Shader(const char *vertex, const char *fragment)
-{	
-	unsigned int vertexShader;
-/*	vertexShader = glCreateShader(GL_VERTEX_SHADER); //no, don't send reference here :( no glBindBuffer
-							// GL_VERTEX_SAHDER is a new argument;
-
-	// atach shader source to the shader object so we can pass only object to compiler
-				  //1 string               //ignore
-	glShaderSource(vertexShader, 1, &vertexShaderSource, NULL); // atach
-	glCompileShader(vertexShader);
-	
-
-
-//check for errors during compilation
-	int  success;
-	char infoLog[512];
-	glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
-	if(!success)
-	{
-	    glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);
-	    std::cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n" << infoLog << std::endl;
-	}
-*/
-
-	vertexShader = compileShader(GL_VERTEX_SHADER, vertex);
-
-//end check
-///////////////////////////////////////////////////////////////////////////////////////////
-
-//Same thing as vertex shader
-
-	unsigned int fragmentShader;
-/*	fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-	glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
-	glCompileShader(fragmentShader);
-
-
-//	int  success;
-//	char infoLog[512]; aleady defined
-	glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
-	if(!success)
-	{
-	    glGetShaderInfoLog(fragmentShader, 512, NULL, infoLog);
-	    std::cout << "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n" << infoLog << std::endl;
-	}
-*/
-	fragmentShader = compileShader(GL_FRAGMENT_SHADER, fragment);
-
-
-
-/////////////////////////////////////////////////////////////////////////////////////////////
-//end
-//create program from two shaders
-
-//	now write this to object ID
-//	unsigned int shaderProgram;
+Shader::Shader(std::vector<const char *>shaders/*const char *vertex, const char *fragment*/)
+{
+	unsigned int vertexShader = compileShader(GL_VERTEX_SHADER, shaders[0]);
+	unsigned int fragmentShader = compileShader(GL_FRAGMENT_SHADER, shaders[1]);
 
 	ID = glCreateProgram();
 
 	glAttachShader(ID, vertexShader);
 	glAttachShader(ID, fragmentShader);
+
+
+	unsigned int geometryShader; //for visibility to delete
+	if (shaders.size() == 3)
+	{
+		geometryShader = compileShader(GL_GEOMETRY_SHADER, shaders[2]);
+		glAttachShader(ID, geometryShader);
+	}
+//use map here later for assigning 0 to vShader 1 to fShader 2 to gShader in a cycle
+
 	glLinkProgram(ID);
 
 //was defined previously in shaders
@@ -558,8 +570,10 @@ Shader::Shader(const char *vertex, const char *fragment)
 ///////////////////////////////////////////////////////////////////////////////
 
 	glUseProgram(ID);
-	glDeleteShader(fragmentShader);
 	glDeleteShader(vertexShader);
+	glDeleteShader(fragmentShader);
+	if (shaders.size() == 3)
+		glDeleteShader(geometryShader);
 }
 
 
@@ -664,11 +678,9 @@ int	main(int argc, char **argv)
 //	this function loads vertices into VBO. (it knows it's vbo, because it is bound to the GL_ARRAY
 //	_BUFFER. GL_STATIC_DRAW is specified for optimization. could be DYNAMIC (data changes), could be STREAM (data is used not a lot)
 	glBufferData(GL_ARRAY_BUFFER, sizeof(float) * myModel.vertices.size(), &myModel.vertices[0], GL_STATIC_DRAW);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
 
-
-	    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-
-	    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * myModel.vertex_indices.size(), &myModel.vertex_indices[0], GL_STATIC_DRAW);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * myModel.vertex_indices.size(), &myModel.vertex_indices[0], GL_STATIC_DRAW);
 
 
 							//how many bytes in a line
@@ -690,7 +702,8 @@ int	main(int argc, char **argv)
 
 
 
-	Shader myShader(vertexShaderSource, fragmentShaderSource);
+	std::vector<const char *>shaders{vertexShaderSource, fragmentShaderSource, geometryShaderSource};
+	Shader myShader(shaders);
 
 
 
@@ -720,10 +733,10 @@ int	main(int argc, char **argv)
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 //start setting up uniform variable
 
-		int newVertexLocation = glGetUniformLocation(myShader.ID, "M");
+		int newVertexLocation = glGetUniformLocation(myShader.ID, "yRotate");
 		glUniformMatrix4fv(newVertexLocation, 1, GL_TRUE, yRotate);
 
-		int newVertexLocation2 = glGetUniformLocation(myShader.ID, "M1");
+		int newVertexLocation2 = glGetUniformLocation(myShader.ID, "xRotate");
 		glUniformMatrix4fv(newVertexLocation2, 1, GL_TRUE, xRotate);
 
 
