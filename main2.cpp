@@ -683,7 +683,7 @@ int	main(int argc, char **argv)
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * myModel.vertex_indices.size(), &myModel.vertex_indices[0], GL_STATIC_DRAW);
 
 
-							//how many bytes in a line
+			//because vec3			//how many bytes in a line/stride
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void *) 0);
 
 	glEnableVertexAttribArray(0); // 0 = location of the vertex attribute
@@ -697,7 +697,7 @@ int	main(int argc, char **argv)
 //	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void *) (6 * sizeof(float))); 
 //	glEnableVertexAttribArray(2); // 1 = location of the vertex attribute
 
-	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void *) (sizeof(float) * myModel.vertex_indices.size()));
+	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void *) (sizeof(float) * myModel.vertex_indices.size()));
 	glEnableVertexAttribArray(2);
 
 
