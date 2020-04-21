@@ -6,6 +6,53 @@
 #include <iostream>
 #include <fstream>
 #include <vector>
+/*
+float vertices[] = {
+-5, -5, 5, 1, 0, 0, //0, 1, 0,
+5, -5, 5, 1, 0, 0, //0, 1, 0,
+5, 5, 5, 1, 0, 0, //0, 1, 0,
+-5, 5, 5, 1, 0, 0, //0, 1, 0,
+
+-5, -5, -5, 0, 0, 1, //1, 0, 0,
+5, -5, -5, 0, 0, 1, //1, 0, 0,
+5, 5, -5, 0, 0, 1, //1, 0, 0,
+-5, 5, -5, 0, 0, 1, //1, 0, 0
+
+//,
+0, 1, 0,
+0, 1, 0,
+0, 1, 0,
+0, 1, 0,
+
+1, 0, 0,
+1, 0, 0,
+1, 0, 0, 
+1, 0, 0
+
+};
+
+unsigned int indices[] = {
+
+0, 1, 2,
+2, 3, 0,
+
+0, 1, 4,
+1, 4, 5,
+
+1, 2, 5,
+2, 5, 6,
+
+0, 4, 3,
+4, 3, 7,
+
+4, 5, 6,
+6, 7, 4,
+
+3, 6, 7,
+6, 3, 2
+
+};
+*/
 
 void	framebuffer_size_callback(GLFWwindow *window, int w, int h);
 void	processInput(GLFWwindow *window);
@@ -37,7 +84,7 @@ const char *geometryShaderSource =
 			"layout (location = 1) in vec3 color;\n"
 			"layout (location = 2) in vec3 aNormal;\n"
 //comment to test if compiles geomShader
-//			"out vec3 outColor;\n"
+			"out vec3 outColor;\n"
 			"uniform mat4 P;\n"
 			"uniform mat4 xRotate;\n"
 			"uniform mat4 yRotate;\n"
@@ -46,6 +93,7 @@ const char *geometryShaderSource =
 			"uniform vec4 p;\n"
 
 //for geomShader
+
 "out VS_OUT {\n" 
 "   vec4 normalEnd;\n"
 "} vs_out;\n"
@@ -56,10 +104,13 @@ const char *geometryShaderSource =
 			"void main()\n"
 			"{\n"
 //				"vec3 lightPos = vec3(20, 20, 20);\n"
-				"gl_Position =  P * (xRotate * yRotate * (vec4(aPos.x, aPos.y, aPos.z, 1) - p));\n"
+//				"aPos = aPos + aNormal;\n"
+
+				"gl_Position =  P * (xRotate * yRotate * (vec4(aPos, 1) - p));\n"
 
   //  "mat3 normalMatrix = mat3(transpose(inverse(view * model)));\n"
 //    "vs_out.normal = normalize(vec3(projection * vec4(normalMatrix * aNormal, 0.0)));\n"
+
 
 				"vs_out.normalEnd =  P * (xRotate * yRotate * (vec4(aPos + aNormal * 0.4, 1) - p))\n;"
 
@@ -68,7 +119,7 @@ const char *geometryShaderSource =
 
 
 //geomShader
-/*
+	/*
 
 
 				"vec3 lightPos = vec3(p.x, p.y, p.z);\n"
@@ -92,7 +143,24 @@ const char *geometryShaderSource =
 					"outColor = vec3(0, 0, 1);\n" // blue
 
 */
-//				"outColor = color;\n"
+
+
+//				"vec3 lightPos = vec3(p.x, p.y, p.z);\n"
+
+				"vec3 lightPos = vec3(100, 100, 100);\n"
+
+
+				"vec3 hitli = lightPos - aPos;\n"
+				"hitli = hitli / sqrt(hitli * hitli);\n"
+				"float brightness = dot(aNormal, hitli);\n"	
+//				"if (brightness < 0)\n"
+//					"brightness = dot(aNormal, -hitli);\n;"
+
+				"outColor = vec3(1, 0.5, 0.5) * brightness;\n"
+
+//				"if (aNormal == vec3(0, 0, 0))"
+//					"outColor = vec3(1, 0, 0);\n"		
+
 			"}\0";
 
 
@@ -100,7 +168,8 @@ const char *geometryShaderSource =
 
 
 ///////////////////////////////////////////////////////////////////////////
-
+//to enable geometry shader comment outColor = color in vertex shader and change
+//custom color to 1 1 1 1 color in fragment shader
 
 const char *geometryShaderSource = 
 "#version 330 core\n"
@@ -128,7 +197,7 @@ const char *geometryShaderSource =
 "void main()\n"
 "{\n"
 "    GenerateLine(0);\n"  
-"  GenerateLine(1);\n"
+"    GenerateLine(1);\n"
 "    GenerateLine(2);\n"
 "}\0";
 
@@ -141,12 +210,12 @@ const char *geometryShaderSource =
 				"out vec4 FragColor;\n" // has to have out vec4 type as output (but vec3 works too?)
 
 //geomShader
-//				"in vec3 outColor;\n"
+				"in vec3 outColor;\n"
 				"void main()\n"
 				"{\n"
 //geomShader
-//					"FragColor = vec4(outColor, 1);\n"
-					"FragColor = vec4(1, 1, 1, 1);\n"
+					"FragColor = vec4(outColor, 1);\n"
+//					"FragColor = vec4(1, 1, 1, 1);\n"
 
 
 				"}\0";
@@ -312,34 +381,67 @@ class Model
 	public:
 		void loadData(char *path);
 		void pushBackNormals();
+
+
 		std::vector<unsigned int>vertex_indices;
 		std::vector<float>vertices;
 		std::vector<float>normals;
 		std::vector<unsigned int>normal_indices;
-		
+
+
+		unsigned int offset_to_normals;
+
+	
 };
 
 void	Model::pushBackNormals()
 {
+//	vertices.push_back(normals[normal_indices[0]]);
+
+//#if 0
 	int i = 0;
 	int j = 0;
 	//j is the index of the vertex
 	//j ranges from 0th vertex to last vertex
 
-	int numberOfVertices = vertices.size() / 2;
+//	int numberOfVertices = vertices.size() / 2;
 
 /*	while (j < vertexSize)
 	{
 		vertices.push_back(0.3f);
 		j++;
 	}
-*/	while (i < vertex_indices.size())
-	//for every vertex_index search for index which references jth vertex
+*/
+	//i is an index of the vertex indices
+	printf("vertices count %lu\n", vertices.size() / 6);
+
+
+	while (i < vertex_indices.size())
+	//for every vertex_index search for normal_index which references jth vertex
 	{
 		//if we found an index, which tells us to draw jth vertex
 		if (vertex_indices[i] == j)
 		{
-			vertices.push_back(normals[i]);
+			vertices.push_back(normals[6 * normal_indices[i]]);
+			vertices.push_back(normals[6 * normal_indices[i] + 1]);
+			vertices.push_back(normals[6 * normal_indices[i] + 2]);
+/*
+			vertices.push_back(normals[3 * normal_indices[i]]);
+			vertices.push_back(normals[3 * normal_indices[i] + 1]);
+			vertices.push_back(normals[3 * normal_indices[i] + 2]);
+			*/
+//			printf("normal vector is %f,%f,%f\n", normals[3 * normal_indices[i]],  normals[3 * normal_indices[i] + 1], normals[3 * normal_indices[i] + 2]);
+
+/*			printf("lenght2 is %f\n", normals[3 * normal_indices[i]] * 
+						normals[3 * normal_indices[i]] + 
+
+						normals[3 * normal_indices[i] + 1] *
+ 						normals[3 * normal_indices[i] + 1] + 
+
+						normals[3 * normal_indices[i] + 2] * 
+						normals[3 * normal_indices[i] + 2]);
+
+*/
 			j++;
 			i = 0;
 			continue;
@@ -348,7 +450,8 @@ void	Model::pushBackNormals()
 		//the connection with the the normal cannot be established. the search ends
 		i++;
 	}
-
+	printf("added vectors %lu\n", vertices.size()/6 - 7752/6);
+//#endif
 }
 
 
@@ -368,9 +471,9 @@ static void	loadVectors(std::vector<float> &vertices, char **explode)
 {
 	printf("after explode %s, %s, %s\n", explode[1], explode[2], explode[3]);
 
-	vertices.push_back(atof(explode[1]) * 10);
-	vertices.push_back(atof(explode[2]) * 10);
-	vertices.push_back(atof(explode[3]) * 10);
+	vertices.push_back(atof(explode[1]) * 1);
+	vertices.push_back(atof(explode[2]) * 1);
+	vertices.push_back(atof(explode[3]) * 1);
 
 	int r = 0,g = 0,b = 0;
 
@@ -379,11 +482,11 @@ static void	loadVectors(std::vector<float> &vertices, char **explode)
 	    && b == 0) //no black points
 
 	{
-//		r = rand() % 2;
-//		g = rand() % 2;
-//		b = rand() % 2;
+		r = rand() % 2;
+		g = rand() % 2;
+		b = rand() % 2;
 
-		r = g = b = 1;
+//		r = g = b = 1;
 	}
 	vertices.push_back(r);
 	vertices.push_back(g);
@@ -457,7 +560,7 @@ void	Model::loadData(char *path)
 			explode = ft_strsplit(line.c_str(), ' ');
 //this will load colors to normals from loadVertices
 			if (strcmp(explode[0], "vn") == 0)
-				loadVectors( normals, explode);
+				loadVectors(normals, explode);
 			if (strcmp(explode[0], "v") == 0)
 				loadVectors(vertices, explode);
 			else if (strcmp(explode[0], "f") == 0)
@@ -465,6 +568,7 @@ void	Model::loadData(char *path)
 			free_double_pointer(explode);
 		}
 	}
+	offset_to_normals = vertices.size() * sizeof(float);
 	pushBackNormals();
 	printf("file read\n");
 }
@@ -597,7 +701,7 @@ int	main(int argc, char **argv)
 	if (argc == 2)
 		myModel.loadData(argv[1]);
 
-	printOpbject(myModel);
+//	printOpbject(myModel);
 
 
 /*
@@ -677,34 +781,28 @@ int	main(int argc, char **argv)
 
 //	this function loads vertices into VBO. (it knows it's vbo, because it is bound to the GL_ARRAY
 //	_BUFFER. GL_STATIC_DRAW is specified for optimization. could be DYNAMIC (data changes), could be STREAM (data is used not a lot)
-	glBufferData(GL_ARRAY_BUFFER, sizeof(float) * myModel.vertices.size(), &myModel.vertices[0], GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, /*sizeof(vertices), */myModel.vertices.size() * sizeof(float), &myModel.vertices[0] /*vertices*/, GL_STATIC_DRAW);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
 
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * myModel.vertex_indices.size(), &myModel.vertex_indices[0], GL_STATIC_DRAW);
+
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, /*sizeof(indices)*/sizeof(unsigned int) * myModel.vertex_indices.size(), &myModel.vertex_indices[0] /*indices*/, GL_STATIC_DRAW);
 
 
-			//because vec3			//how many bytes in a line/stride
+			//because vec3			//how many bytes in a line/line = 1 vertex
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void *) 0);
-
 	glEnableVertexAttribArray(0); // 0 = location of the vertex attribute
 
 // color  //how much does location = 1 take space in a line	          //offset for the second location
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void *) (3 * sizeof(float)));
 	glEnableVertexAttribArray(1); // 1 = location of the vertex attribute
 
-	
 //add normals for this
-//	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void *) (6 * sizeof(float))); 
-//	glEnableVertexAttribArray(2); // 1 = location of the vertex attribute
 
-	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void *) (sizeof(float) * myModel.vertex_indices.size()));
+	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void *)/*(48 * sizeof(float)) */(myModel.offset_to_normals));
 	glEnableVertexAttribArray(2);
 
-
-
-	std::vector<const char *>shaders{vertexShaderSource, fragmentShaderSource, geometryShaderSource};
+	std::vector<const char *>shaders{vertexShaderSource, fragmentShaderSource/*, geometryShaderSource*/};
 	Shader myShader(shaders);
-
 
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -759,8 +857,6 @@ int	main(int argc, char **argv)
 		int newVertexLocation6 = glGetUniformLocation(myShader.ID, "cR");
 		glUniformMatrix4fv(newVertexLocation6, 1, GL_TRUE, constantRotation);
 
-
-
 		glUseProgram(myShader.ID);
 
 //end
@@ -785,9 +881,15 @@ int	main(int argc, char **argv)
 
 //		if (numberoffloats < myModel.indices.size())
 //			numberoffloats += 20 /*6319 * 3*/;
-		numberoffloats = myModel.vertex_indices.size();
-		glDrawElements(GL_TRIANGLES, round(numberoffloats) /*6319* 3*//* * 3 * 1*/, GL_UNSIGNED_INT, 0);
 
+//uncomment for argument model
+//		numberoffloats = myModel.vertex_indices.size();
+//		printf("here1\n");
+		numberoffloats = /*sizeof(indices) / sizeof(indices[0]);*/myModel.vertex_indices.size();
+
+//		printf("here3\n");
+		glDrawElements(GL_TRIANGLES, round(numberoffloats) /*6319* 3*//* * 3 * 1*/, GL_UNSIGNED_INT, 0);
+//		printf("here2\n");
 
 		//put image to window
 		//prevents flickering
@@ -1009,11 +1111,6 @@ void cursor_position_callback(GLFWwindow* window, double x, double y)
 
 
 
-//	vec4 difz = rotate(cambasez, vec4(yaw, pitch, 0, 0));
-
-
-
-//	printf("difx is %f, %f, %f\n", difx[0], difx[1], difx[2]);
 	printf("difz is %f, %f, %f\n", difz[0], difz[1], difz[2]);
 
 
