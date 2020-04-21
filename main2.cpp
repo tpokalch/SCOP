@@ -153,10 +153,12 @@ const char *geometryShaderSource =
 				"vec3 hitli = lightPos - aPos;\n"
 				"hitli = hitli / sqrt(hitli * hitli);\n"
 				"float brightness = dot(aNormal, hitli);\n"	
+				"if (brightness < 0.3)\n"
+					"brightness = 0.3;\n"
 //				"if (brightness < 0)\n"
 //					"brightness = dot(aNormal, -hitli);\n;"
 
-				"outColor = vec3(1, 0.5, 0.5) * brightness;\n"
+				"outColor = vec3(0.5, 0.5, 1) * brightness;\n"
 
 //				"if (aNormal == vec3(0, 0, 0))"
 //					"outColor = vec3(1, 0, 0);\n"		
@@ -214,6 +216,7 @@ const char *geometryShaderSource =
 				"void main()\n"
 				"{\n"
 //geomShader
+
 					"FragColor = vec4(outColor, 1);\n"
 //					"FragColor = vec4(1, 1, 1, 1);\n"
 
@@ -323,7 +326,7 @@ int anglex = 0;
 int angley = 0;
 
 vec4 campos(
-0, 0, 30, 0
+0, 0, 3, 0
 );
 
 vec4 cambasex(
@@ -334,9 +337,9 @@ vec4 cambasez(
 0, 0, -0.4, 0
 );
 
-float	n = 2.0f;
+float	n = 0.20f;
 float	f = 400.0f;
-float	h = 1.0f;
+float	h = 0.10f;
 
 float	projectionMatrix[] = {
 n / h, 0.0f, 0.0f, 0.0f,

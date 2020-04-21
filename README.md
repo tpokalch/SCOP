@@ -3,6 +3,9 @@
 
 Beware! Project under construction ahead.
 
+<p align="center">
+  <img width="80%" src="https://github.com/tpokalch/RT/blob/master/screens/soft.png">
+</p>
 
 Click on video below:
 
