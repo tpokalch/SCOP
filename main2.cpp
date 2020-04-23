@@ -98,6 +98,13 @@ const char *geometryShaderSource =
 "   vec4 normalEnd;\n"
 "} vs_out;\n"
 
+"vec3 norm(vec3 v)\n"
+"{\n"
+	"vec3 ret = v;\n"
+	"ret = ret / sqrt(dot(v, v));\n"
+	"return (ret);\n"
+"}\n"
+
 //need to get address from render loop
 //			"uniform float f;\n"
 
@@ -151,7 +158,7 @@ const char *geometryShaderSource =
 
 
 				"vec3 hitli = lightPos - aPos;\n"
-				"hitli = hitli / sqrt(hitli * hitli);\n"
+				"hitli = norm(hitli);\n"
 				"float brightness = dot(aNormal, hitli);\n"	
 				"if (brightness < 0.3)\n"
 					"brightness = 0.3;\n"
@@ -160,8 +167,48 @@ const char *geometryShaderSource =
 
 				"outColor = vec3(0.5, 0.5, 1) * brightness;\n"
 
-//				"if (aNormal == vec3(0, 0, 0))"
-//					"outColor = vec3(1, 0, 0);\n"		
+
+				"vec3 hitcam = norm(vec3(p) - aPos);\n"
+				"vec3 newNormal = dot(hitcam, aNormal) * aNormal;\n"
+				"vec3 reflray = newNormal + (newNormal - hitcam);\n"
+
+				"hitli = norm(hitli);\n"
+
+				"if (dot(hitli, hitli) > 1.1)\n"
+				"{\n"
+					"outColor = vec3(1, 0, 1);\n"
+					"return ;\n"
+				"}\n"
+
+
+				"reflray = norm(reflray);\n"
+				"float coef = dot(reflray, hitli);\n"
+
+				"if (coef > 1 || coef < -1)\n"
+				"{\n"
+					"outColor = vec3(1, 0, 0);\n"
+					"return ;\n"
+				"}\n"
+
+
+				"if (coef < 0)\n"
+				"{\n"
+			//		"outColor = vec3(0, 1, 0);\n"
+					"return ;\n"
+				"}\n"
+				"coef = coef * coef;\n"
+				"coef = coef * coef;\n"
+				"coef = coef * coef;\n"
+				"coef = coef * coef;\n"
+				"coef = coef * coef;\n"
+/*				"coef = coef * coef;\n"
+				"coef = coef * coef;\n"
+				"coef = coef * coef;\n"
+
+*/
+
+				"outColor = (1 -coef) * outColor + (coef )* vec3(1, 1, 1);\n"
+
 
 			"}\0";
 
@@ -213,9 +260,41 @@ const char *geometryShaderSource =
 
 //geomShader
 				"in vec3 outColor;\n"
+				"in vec3 aPos;\n"
 				"void main()\n"
 				"{\n"
 //geomShader
+
+/*
+
+				"vec3 hitcam = norm(vec3(p) - aPos);\n"
+				"vec3 newNormal = dot(hitcam, aNormal) * aNormal;\n"
+				"vec3 reflray = newNormal + (newNormal - hitcam);\n"
+
+				"hitli = norm(hitli);\n"
+				"reflray = norm(reflray);\n"
+				"float coef = dot(reflray, hitli);\n"
+				"if (coef < 0)\n"
+				"{\n"
+					"outColor = vec3(0, 1, 0);\n"
+					"return ;\n"
+				"}\n"
+				"if (coef > 2.5 || coef < -2.5)\n"
+				"{\n"
+					"outColor = vec3(1, 0, 0);\n"
+					"return ;\n"
+				"}\n"
+				"coef = coef * coef;\n"
+				"coef = coef * coef;\n"
+				"coef = coef * coef;\n"
+				"coef = coef * coef;\n"
+
+
+
+				"outColor = (coef) * outColor + (1 - coef )* vec3(1, 1, 1);\n"
+
+*/
+
 
 					"FragColor = vec4(outColor, 1);\n"
 //					"FragColor = vec4(1, 1, 1, 1);\n"
@@ -326,15 +405,15 @@ int anglex = 0;
 int angley = 0;
 
 vec4 campos(
-0, 0, 3, 0
+0, 0, 30, 0
 );
 
 vec4 cambasex(
-0.4, 0, 0, 0
+0.2, 0, 0, 0
 );
 
 vec4 cambasez(
-0, 0, -0.4, 0
+0, 0, -0.2, 0
 );
 
 float	n = 0.20f;
