@@ -6,6 +6,8 @@
 #include <iostream>
 #include <fstream>
 #include <vector>
+#include <array>
+
 /*
 float vertices[] = {
 -5, -5, 5, 1, 0, 0, //0, 1, 0,
@@ -88,128 +90,72 @@ const char *geometryShaderSource =
 			"uniform mat4 P;\n"
 			"uniform mat4 xRotate;\n"
 			"uniform mat4 yRotate;\n"
+			"uniform mat4 Rotate;\n"	
 			"uniform mat4 cR;\n"
-
+			"uniform mat4 translate;\n"
+			"uniform mat4 matrix;\n"
 			"uniform vec4 p;\n"
 
-//for geomShader
+//for geomShader1
+
 
 "out VS_OUT {\n" 
-"   vec4 normalEnd;\n"
+"	mat4 matrix;\n"
 "} vs_out;\n"
 
-"vec3 norm(vec3 v)\n"
-"{\n"
-	"vec3 ret = v;\n"
-	"ret = ret / sqrt(dot(v, v));\n"
-	"return (ret);\n"
-"}\n"
+
+//for other geom shader
+/*
+"out VS_OUT {\n" 
+"	vec4 normalEnd;\n"
+"} vs_out;\n"
+*/
+
 
 //need to get address from render loop
 //			"uniform float f;\n"
 
 			"void main()\n"
 			"{\n"
-//				"vec3 lightPos = vec3(20, 20, 20);\n"
-//				"aPos = aPos + aNormal;\n"
+				"gl_Position =  (vec4(aPos, 1));\n"
+				"vs_out.matrix = matrix;\n"
+				//if straight to fragment shader
+				"outColor = vec3(1, 1, 1);\n"
+//				"gl_Position = matrix * gl_Position;\n"
+				/////////////
+//				"vs_out.normalEnd =  matrix * (vec4(aPos + aNormal * 0.4, 1))\n;"
 
-				"gl_Position =  P * (xRotate * yRotate * (vec4(aPos, 1) - p));\n"
+//				"vs_out.light = matrix * (vec4(100, 100, 100, 1));\n"
 
-  //  "mat3 normalMatrix = mat3(transpose(inverse(view * model)));\n"
-//    "vs_out.normal = normalize(vec3(projection * vec4(normalMatrix * aNormal, 0.0)));\n"
-
-
-				"vs_out.normalEnd =  P * (xRotate * yRotate * (vec4(aPos + aNormal * 0.4, 1) - p))\n;"
-
-//				"vs_out.normal =  vec3(P * (xRotate * yRotate * (vec4(aNormal.x, aNormal.y, aNormal.z, 1) - p)));\n"
-
-
-
-//geomShader
-	/*
-
-
-				"vec3 lightPos = vec3(p.x, p.y, p.z);\n"
-
-
-				"vec3 hitli = lightPos - aPos;\n"
-				"hitli = hitli / sqrt(hitli * hitli);\n"
-
-
-
-				"float brightness = dot(aNormal, hitli);\n"
-				"if (brightness >= 0)\n"
-					"outColor = (brightness) * color;\n"
-
-
-				"if (brightness < 0)\n"
-					"outColor = vec3(1, 0, 0);\n" // red
-				"if (aNormal == vec3(0, 0, 0))\n"
-					"outColor = vec3(0, 1, 0);\n" // green
-				"if (brightness > 1)\n"
-					"outColor = vec3(0, 0, 1);\n" // blue
-
-*/
-
-
-//				"vec3 lightPos = vec3(p.x, p.y, p.z);\n"
-
+#if 0
 				"vec3 lightPos = vec3(100, 100, 100);\n"
-
-
 				"vec3 hitli = lightPos - aPos;\n"
-				"hitli = norm(hitli);\n"
-				"float brightness = dot(aNormal, hitli);\n"	
-				"if (brightness < 0.3)\n"
-					"brightness = 0.3;\n"
-//				"if (brightness < 0)\n"
-//					"brightness = dot(aNormal, -hitli);\n;"
-
-				"outColor = vec3(0.5, 0.5, 1) * brightness;\n"
+				"hitli = normalize(hitli);\n"
+				"float brightness = max(0.3, dot(aNormal, hitli));\n"
+				"outColor = vec3(0, 0.5, 1) * brightness;\n"
 
 
-				"vec3 hitcam = norm(vec3(p) - aPos);\n"
+				"vec3 hitcam = normalize(vec3(p) - aPos);\n"
 				"vec3 newNormal = dot(hitcam, aNormal) * aNormal;\n"
 				"vec3 reflray = newNormal + (newNormal - hitcam);\n"
 
-				"hitli = norm(hitli);\n"
+				"hitli = normalize(hitli);\n"
 
-				"if (dot(hitli, hitli) > 1.1)\n"
-				"{\n"
-					"outColor = vec3(1, 0, 1);\n"
-					"return ;\n"
-				"}\n"
-
-
-				"reflray = norm(reflray);\n"
+				"reflray = normalize(reflray);\n"
 				"float coef = dot(reflray, hitli);\n"
-
-				"if (coef > 1 || coef < -1)\n"
-				"{\n"
-					"outColor = vec3(1, 0, 0);\n"
-					"return ;\n"
-				"}\n"
-
-
 				"if (coef < 0)\n"
 				"{\n"
-			//		"outColor = vec3(0, 1, 0);\n"
 					"return ;\n"
 				"}\n"
-				"coef = coef * coef;\n"
-				"coef = coef * coef;\n"
-				"coef = coef * coef;\n"
-				"coef = coef * coef;\n"
-				"coef = coef * coef;\n"
-/*				"coef = coef * coef;\n"
-				"coef = coef * coef;\n"
-				"coef = coef * coef;\n"
 
-*/
 
+				"coef = coef * coef;\n"
+				"coef = coef * coef;\n"
+				"coef = coef * coef;\n"
+				"coef = coef * coef;\n"
+				"coef = coef * coef;\n"
 				"outColor = (1 -coef) * outColor + (coef )* vec3(1, 1, 1);\n"
-
-
+#endif
 			"}\0";
 
 
@@ -219,35 +165,78 @@ const char *geometryShaderSource =
 ///////////////////////////////////////////////////////////////////////////
 //to enable geometry shader comment outColor = color in vertex shader and change
 //custom color to 1 1 1 1 color in fragment shader
+//also compile this shader with the sahder program
+//	this shader will draw normals!!!
 
-const char *geometryShaderSource = 
+/*
+const char *geometryShaderSource1 = 
 "#version 330 core\n"
 "layout (triangles) in;\n"
 "layout (line_strip, max_vertices = 6) out;\n"
+"out vec3 outColor;\n"
 
 "in VS_OUT {\n"
-"    vec4 normalEnd;\n"
+"	vec4 normalEnd;\n"
 "} gs_in[];\n"
 
 //"const float MAGNITUDE = 0.004;\n"
 
 "void GenerateLine(int index)\n"
 "{\n"
-"    gl_Position = gl_in[index].gl_Position;\n"
-"    EmitVertex();\n"
-//"    gl_Position = gl_in[index].gl_Position + vec4(gs_in[index].normal, 0.0) * MAGNITUDE;\n"
-"    gl_Position = vec4(gs_in[index].normalEnd);\n"
+"	gl_Position = gl_in[index].gl_Position;\n"
+"	outColor = vec3(1, 1, 1);\n"//need to specify color for every vertex 
+"	EmitVertex();\n"
 
+"	gl_Position = vec4(gs_in[index].normalEnd);\n"
+"	outColor = vec3(1, 1, 1);\n"//here too
+"	EmitVertex();\n"
 
-"    EmitVertex();\n"
-"    EndPrimitive();\n"
+"	EndPrimitive();\n"
 "}\n"
 
 "void main()\n"
 "{\n"
-"    GenerateLine(0);\n"  
-"    GenerateLine(1);\n"
-"    GenerateLine(2);\n"
+"	GenerateLine(0);\n"  
+"	GenerateLine(1);\n"
+"	GenerateLine(2);\n"
+"}\0";
+*/
+///////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////
+//this shader calculates normals. takes vertice's coordinates in global space and the matrix.
+const char *geometryShaderSource1 = 
+"#version 330 core\n"
+"layout (triangles) in;\n"
+"layout (triangle_strip, max_vertices = 3) out;\n"
+"out vec3 outColor;\n"
+
+"in VS_OUT {\n"
+"	mat4 matrix;\n"
+"} gs_in[];\n"
+
+
+"void GenerateLine(int index, vec3 normal)\n"
+"{\n"
+"	vec3 hitli = normalize(vec3(100, 100, 100) - vec3(gl_in[index].gl_Position));\n"
+"	float bri = max(abs(dot(hitli, normal)), 0.3);\n"
+"	outColor = vec3(1, 1, 1) * bri;\n"
+"	gl_Position = gs_in[index].matrix * gl_in[index].gl_Position;\n"
+"	EmitVertex();\n"
+"}\n"
+
+"void main()\n"
+"{\n"
+"   vec3 a = vec3(gl_in[0].gl_Position) - vec3(gl_in[1].gl_Position);\n"
+"   vec3 b = vec3(gl_in[2].gl_Position) - vec3(gl_in[1].gl_Position);\n"
+"   vec3 normal = normalize(cross(b, a));\n"
+
+
+"	GenerateLine(0, normal);\n"  
+"	GenerateLine(1, normal);\n"
+"	GenerateLine(2, normal);\n"
+"	EndPrimitive();\n"
+
+
 "}\0";
 
 
@@ -259,47 +248,11 @@ const char *geometryShaderSource =
 				"out vec4 FragColor;\n" // has to have out vec4 type as output (but vec3 works too?)
 
 //geomShader
+//				"in vec3 normal;\n" //from geom shader
 				"in vec3 outColor;\n"
-				"in vec3 aPos;\n"
 				"void main()\n"
 				"{\n"
-//geomShader
-
-/*
-
-				"vec3 hitcam = norm(vec3(p) - aPos);\n"
-				"vec3 newNormal = dot(hitcam, aNormal) * aNormal;\n"
-				"vec3 reflray = newNormal + (newNormal - hitcam);\n"
-
-				"hitli = norm(hitli);\n"
-				"reflray = norm(reflray);\n"
-				"float coef = dot(reflray, hitli);\n"
-				"if (coef < 0)\n"
-				"{\n"
-					"outColor = vec3(0, 1, 0);\n"
-					"return ;\n"
-				"}\n"
-				"if (coef > 2.5 || coef < -2.5)\n"
-				"{\n"
-					"outColor = vec3(1, 0, 0);\n"
-					"return ;\n"
-				"}\n"
-				"coef = coef * coef;\n"
-				"coef = coef * coef;\n"
-				"coef = coef * coef;\n"
-				"coef = coef * coef;\n"
-
-
-
-				"outColor = (coef) * outColor + (1 - coef )* vec3(1, 1, 1);\n"
-
-*/
-
-
 					"FragColor = vec4(outColor, 1);\n"
-//					"FragColor = vec4(1, 1, 1, 1);\n"
-
-
 				"}\0";
 
 
@@ -307,7 +260,10 @@ const char *geometryShaderSource =
 class	vec4
 {
 	public:
-		vec4() {}
+		vec4()
+		{
+			array[0] = 0; array[1] = 0; array[2] = 0; array[3] = 0;
+		}
 		vec4(float xx, float yy, float zz, float ww)
 		{
 			array[0] = xx; array[1] = yy; array[2] = zz; array[3] = ww;
@@ -363,25 +319,35 @@ class mat4
 {
 	public:
 		mat4()
-		     {
+			 {
 			array[0] = 1; array[1] = 0, array[2] = 0, array[3] = 0;
 			array[4] = 0; array[5] = 1, array[6] = 0, array[7] = 0;
 			array[8] = 0; array[9] = 0, array[10] = 1, array[11] = 0;
 			array[12] = 0; array[13] = 0, array[14] = 0, array[15] = 1;
-		     }
+			 }
 	
 		mat4(float x11, float x12, float x13, float x14,
-		     float x21, float x22, float x23, float x24,
-		     float x31, float x32, float x33, float x34,
-		     float x41, float x42, float x43, float x44)
-		     {
+			 float x21, float x22, float x23, float x24,
+			 float x31, float x32, float x33, float x34,
+			 float x41, float x42, float x43, float x44)
+			 {
 			array[0] = x11; array[1] = x12, array[2] = x13, array[3] = x14;
 			array[4] = x21; array[5] = x22, array[6] = x23, array[7] = x24;
 			array[8] = x31; array[9] = x32, array[10] = x33, array[11] = x34;
 			array[12] = x41; array[13] = x42, array[14] = x43, array[15] = x44;
-		     }
+			 }
+		mat4(vec4 &column1, vec4 &column2, vec4 &column3, vec4 &column4)
+			 {
+			array[0] = column1[0]; array[1] = column2[0], array[2] = column3[0], array[3] = column4[0];
+			array[4] = column1[1]; array[5] = column2[1], array[6] = column3[1], array[7] = column4[1];
+			array[8] = column1[2]; array[9] = column2[2], array[10] = column3[2], array[11] = column4[2];
+			array[12] = column1[3]; array[13] = column2[3], array[14] = column3[3], array[15] = column4[3];
+			 }
+
+
+
 		float array[16];
-		vec4 operator*(vec4 &rhs)
+		vec4 operator*(vec4&& rhs)
 		{
 			vec4 ret(
 				array[0] * rhs[0] + array[1] * rhs[1] + array[2] * rhs[2] + array[3] * rhs[3],
@@ -391,7 +357,27 @@ class mat4
 				);
 			return (ret);
 		}
-		mat4 invert() {mat4 ret(*this); ret[2] = -ret[2]; ret[8] = -ret[8]; ret[6] = -ret[6]; ret[9] = -ret[9]; return ret;}
+		vec4 operator*(vec4& rhs)
+		{
+			return (*this * std::move(rhs));
+		}	
+		mat4 operator*(mat4 &&rhs)
+		{
+			vec4 column1(*this * vec4(rhs[0], rhs[4], rhs[8], rhs[12]));
+			vec4 column2(*this * vec4(rhs[1], rhs[5], rhs[9], rhs[13]));
+			vec4 column3(*this * vec4(rhs[2], rhs[6], rhs[10], rhs[14]));
+			vec4 column4(*this * vec4(rhs[3], rhs[7], rhs[11], rhs[15]));
+
+			mat4 ret(column1, column2, column3, column4);
+			return (ret);
+		}
+		mat4 operator*(mat4 &rhs)
+		{
+//			printf("___________mult matrix\n");
+			return (*this * std::move(rhs));
+		}
+
+	mat4 invert() {mat4 ret(*this); ret[2] = -ret[2]; ret[8] = -ret[8]; ret[6] = -ret[6]; ret[9] = -ret[9]; return ret;}
 		float &operator[] (int index) { return array[index]; }
 		operator float *() {return array;};
 };		
@@ -404,6 +390,7 @@ int numberoffloats = 0;
 int anglex = 0;
 int angley = 0;
 
+/*
 vec4 campos(
 0, 0, 30, 0
 );
@@ -415,19 +402,18 @@ vec4 cambasex(
 vec4 cambasez(
 0, 0, -0.2, 0
 );
-
+*/
 float	n = 0.20f;
 float	f = 400.0f;
 float	h = 0.10f;
 
-float	projectionMatrix[] = {
+mat4	projectionMatrix(
 n / h, 0.0f, 0.0f, 0.0f,
 0.0f, n / h, 0.0f, 0.0f,
 0.0f, 0.0f, -(f + n) / (f - n), -2 * f * n / (f - n),
 0.0f, 0.0f, -1.0f, 0.0f  //positive z dir is outwards when = 1
-			};
-
-
+			);
+/*
 mat4	yRotate(
 1.0f, 0.0f, 0.0f, 0.0f,
 0.0f, 1.0f, 0.0f, 0.0f,
@@ -442,6 +428,7 @@ mat4	xRotate(
 0.0f, 0.0f, 0.0f, 1.0f
 		);
 
+*/
 
 float	translate[] = {
 1.0f, 0.0f, 0.0f, 0.0f,
@@ -463,7 +450,8 @@ class Model
 	public:
 		void loadData(char *path);
 		void pushBackNormals();
-
+		void initBuffers();
+		void draw();
 
 		std::vector<unsigned int>vertex_indices;
 		std::vector<float>vertices;
@@ -472,9 +460,280 @@ class Model
 
 
 		unsigned int offset_to_normals;
+		unsigned int	VAO;	
+		unsigned int	VBO;
 
-	
+//		for physics
+		std::vector<std::vector<int>>	conections;
+		std::vector<std::array<float, 3> > forces;
+		std::vector<std::array<float, 3> > speeds;
+
+		void	updateVertices();
+		void	initConections();
+
+		std::vector<float> original_vertices;
+		std::vector<std::array<float, 3> >original_forces;
+
+
 };
+
+
+void	Model::initConections()
+{
+	conections.resize(lround(vertices.size() / 3));
+	forces.resize(lround(vertices.size() / 3));
+	speeds.resize(lround(vertices.size() / 3));
+	original_vertices = vertices;
+	printf("vertices size is %lu\n", vertices.size());
+	printf("forces size is %lu\n", forces.size());
+//	return ;
+	for (int i = 0; i < vertex_indices.size(); i += 3)
+	{
+		printf("\n\npushing connections\n");
+		printf("i is %d\n", i);
+		printf("vertex index is %d", vertex_indices[i]);
+		int first_index = vertex_indices[i];
+		int second_index = vertex_indices[i + 1];
+		int third_index = vertex_indices[i + 2];
+
+
+		conections[first_index].push_back(second_index);
+		conections[first_index].push_back(third_index);
+
+		conections[second_index].push_back(first_index);
+		conections[second_index].push_back(third_index);
+
+		conections[third_index].push_back(first_index);
+		conections[third_index].push_back(second_index);
+
+//		printf("\nBEFORE___________________________________________");
+/*		printf("\n%d: vertex %d is connected to vertices ", i, first_index);
+		for (int j = 0; j < conections[first_index].size(); j++)
+		{
+			printf("%d, ", conections[first_index][j]);
+		}
+
+		printf("\n%d: vertex %d is connected to vertices ", i + 1, second_index);
+		for (int j = 0; j < conections[second_index].size(); j++)
+		{
+			printf("%d, ", conections[second_index][j]);
+		}
+
+		printf("\n%d: vertex %d is connected to vertices ", i + 2, third_index);
+		for (int j = 0; j < conections[third_index].size(); j++)
+		{
+			printf("%d, ", conections[third_index][j]);
+		}
+		printf("\nAFTER__________________________________________");
+
+*/
+		std::vector<int> v = conections[first_index];
+		std::sort(v.begin(), v.end());
+		std::vector<int>::iterator ip = std::unique(v.begin(), v.end());
+		v.resize(std::distance(v.begin(), ip)); 
+		conections[first_index] = v;
+
+		v = conections[second_index];
+		std::sort(v.begin(), v.end());
+		ip = std::unique(v.begin(), v.end());
+		v.resize(std::distance(v.begin(), ip)); 
+		conections[second_index] = v;
+
+		v = conections[third_index];
+		std::sort(v.begin(), v.end());
+		ip = std::unique(v.begin(), v.end());
+		v.resize(std::distance(v.begin(), ip)); 
+		conections[third_index] = v;
+
+
+
+
+		printf("\n%d: vertex %d is connected to vertices ", i, first_index);
+/*		for (int j = 0; j < conections[first_index].size(); j++)
+		{
+			printf("%d, ", conections[first_index][j]);
+		}
+
+		printf("\n%d: vertex %d is connected to vertices ", i + 1, second_index);
+		for (int j = 0; j < conections[second_index].size(); j++)
+		{
+			printf("%d, ", conections[second_index][j]);
+		}
+
+		printf("\n%d: vertex %d is connected to vertices ", i + 2, third_index);
+		for (int j = 0; j < conections[third_index].size(); j++)
+		{
+			printf("%d, ", conections[third_index][j]);
+		}
+*/	}
+
+//	printf("\ndone pushing connections\n");
+//	printf("size of vertices %lu\n", myModel.vertices.size());
+//	printf("size of indices %lu\n", myModel.vertex_indices.size());
+
+
+	for (int i = 0; i < conections.size(); i++)
+	{
+		if (conections[i].size() == 0)
+			continue ;
+		printf("\ni = %d. index - %d, conections - ", i, vertex_indices[i]);
+		for (int j = 0; j < conections[i].size(); j++)
+		{
+			printf("%d, ", conections[i][j]);
+		}
+		printf("\n%d vertex is %f, %f, %f", i, vertices[3 * i + 0], vertices[3 * i + 1], vertices[3 * i + 2]);
+	}
+	printf("size of vertices %lu\n", vertices.size());
+	printf("size of indices %lu\n",vertex_indices.size());
+	printf("size of conections %lu\n",conections.size());
+
+
+
+/////////////////////////		INIT FORCES ORIGINAL
+	original_forces.resize(vertices.size() / 3);
+
+	for (int i = 0; i < forces.size(); i++)
+	{
+
+
+//		printf("creating forces\n");
+//		int index = myModel.vertex_indices[i];
+		int conectionssize = conections[i].size();
+		//ith vertex is connected to some j, j+1... other vetices
+		original_forces[i][0] = 0;
+		original_forces[i][1] = 0;
+		original_forces[i][2] = 0;
+
+
+
+		for (int j = 0; j < conectionssize; j++)
+		{
+		//	printf("i is %d\n", i);
+//		printf("index is %d\n", index);
+	
+			original_forces[i][0] +=  (vertices[3 * conections[i][j] + 0] - vertices[3 * i + 0]);
+			original_forces[i][1] +=  (vertices[3 * conections[i][j] + 1] - vertices[3 * i + 1]);
+			original_forces[i][2] +=  (vertices[3 * conections[i][j] + 2] - vertices[3 * i + 2]);
+
+/*			if (index == 1)
+			{
+				printf("_____________________index 1 coresponds to i = %d\n", i);
+				printf("force on 1 vertex is %f, %f, %f\n", forces[i][0], forces[i][1], forces[i][2]);
+			}
+*/
+		}
+//		printf("final force on %d vertex is %f, %f, %f\n", i, forces[i][0], forces[i][1], forces[i][2]);
+	}
+//	vertices[1200] += 1;
+}
+
+
+void	Model::updateVertices()
+{
+	int forcessize = forces.size(); 
+//	printf("forces size %lu\n", forces.size());
+	for (int i = 0; i < forcessize; i++)
+	{
+
+
+//		printf("creating forces\n");
+//		int index = myModel.vertex_indices[i];
+		int conectionssize = conections[i].size();
+		//ith vertex is connected to some j, j+1... other vetices
+		forces[i][0] = 0;
+		forces[i][1] = 0;
+		forces[i][2] = 0;
+
+
+
+		for (int j = 0; j < conectionssize; j++)
+		{
+		//	printf("i is %d\n", i);
+//		printf("index is %d\n", index);
+	
+			float original_length[3];
+			original_length[0] = (original_vertices[3 * conections[i][j] + 0] - original_vertices[3 * i + 0]) * 1;
+			original_length[1] = (original_vertices[3 * conections[i][j] + 1] - original_vertices[3 * i + 1]) * 1;
+			original_length[2] = (original_vertices[3 * conections[i][j] + 2] - original_vertices[3 * i + 2]) * 1;
+
+
+			float curent_length[3];
+			curent_length[0] = (vertices[3 * conections[i][j] + 0] - vertices[3 * i + 0]);
+			curent_length[1] = (vertices[3 * conections[i][j] + 1] - vertices[3 * i + 1]);
+			curent_length[2] = (vertices[3 * conections[i][j] + 2] - vertices[3 * i + 2]);
+
+
+			forces[i][0] +=  -(original_length[0] - curent_length[0]);
+			forces[i][1] +=  -(original_length[1] - curent_length[1]);
+			forces[i][2] +=  -(original_length[2] - curent_length[2]);
+
+/*			if (index == 1)
+			{
+				printf("_____________________index 1 coresponds to i = %d\n", i);
+				printf("force on 1 vertex is %f, %f, %f\n", forces[i][0], forces[i][1], forces[i][2]);
+			}
+*/
+		}
+//		printf("final force on %d vertex is %f, %f, %f\n", i, forces[i][0], forces[i][1], forces[i][2]);
+	}
+
+//	printf("done\n");
+//	return (0);
+	int speedssize = speeds.size();
+	for (int i = 0; i < speedssize; i++)
+	{
+		//ith vertex is connected to some j, j+1... other vetices
+//		int index = myModel.vertex_indices[i];
+		std::array<float, 3> &force = forces[i];
+/*		std::array<float, 3> original_force = original_forces[i];
+
+
+		float length_of_original_force = sqrt(original_force[0] * original_force[0] + original_force[1] * original_force[1] + original_force[2] * original_force[2]);
+
+		float length_of_force = sqrt(force[0] * force[0] + force[1] * force[1] + force[2] * force[2]);
+		float equilibrium_length = 0.9 * length_of_original_force;
+		float normed_force[3] = {force[0] / length_of_force,
+					force[1] / length_of_force,
+					force[2] / length_of_force};
+		force[0] = (length_of_force - equilibrium_length) * normed_force[0];
+		force[1] = (length_of_force - equilibrium_length) * normed_force[1];
+		force[2] = (length_of_force - equilibrium_length) * normed_force[2];
+
+*/
+
+		speeds[i][0] += force[0] * 0.1;
+		speeds[i][1] += force[1] * 0.1;
+		speeds[i][2] += force[2] * 0.1;
+//		printf("length of force is %f\n", length_of_force);
+//		printf("%d force is %f, %f, %f\n", i, force[0], force[1], force[2]);
+//		printf("%d speed is %f, %f, %f\n", i, speeds[i][0], speeds[i][1], speeds[i][2]);
+
+
+	}
+
+//	return (0);
+//	printf("speeds done\n");
+	int verticessize = vertices.size() / 3;
+	for (int i = 0; i < verticessize; i++)
+	{
+		//ith vertex is connected to some j, j+1... other vetices
+//		int index = vertex_indices[i];	
+
+
+		vertices[i * 3 + 0] += speeds[i][0] * 0.1;
+		vertices[i * 3 + 1] += speeds[i][1] * 0.1;
+		vertices[i * 3 + 2] += speeds[i][2] * 0.1;
+/*
+		vertices[i * 3 + 0] += forces[i][0] * 0.01;
+		vertices[i * 3 + 1] += forces[i][1] * 0.01;
+		vertices[i * 3 + 2] += forces[i][2] * 0.01;
+*/
+
+	}
+//	printf("vertices done\n");
+	glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), &vertices[0], GL_DYNAMIC_DRAW);
+}
+
 
 void	Model::pushBackNormals()
 {
@@ -497,11 +756,18 @@ void	Model::pushBackNormals()
 	//i is an index of the vertex indices
 	printf("vertices count %lu\n", vertices.size() / 6);
 
+	//SEGFULTS HERE IF 12//1 type of faces
+	if (normals.size() == 0)
+	{
+		printf("no model normals\n");
+		return ;
+	}
 
 	while (i < vertex_indices.size())
 	//for every vertex_index search for normal_index which references jth vertex
 	{
 		//if we found an index, which tells us to draw jth vertex
+		
 		if (vertex_indices[i] == j)
 		{
 			vertices.push_back(normals[6 * normal_indices[i]]);
@@ -549,6 +815,7 @@ static void	free_double_pointer(char **explode)
 	free(explode);
 }
 
+
 static void	loadVectors(std::vector<float> &vertices, char **explode)
 {
 	printf("after explode %s, %s, %s\n", explode[1], explode[2], explode[3]);
@@ -560,8 +827,8 @@ static void	loadVectors(std::vector<float> &vertices, char **explode)
 	int r = 0,g = 0,b = 0;
 
 	while (r == 0
-	    && g == 0
-	    && b == 0) //no black points
+		&& g == 0
+		&& b == 0) //no black points
 
 	{
 		r = rand() % 2;
@@ -570,6 +837,8 @@ static void	loadVectors(std::vector<float> &vertices, char **explode)
 
 //		r = g = b = 1;
 	}
+//uncomment return for colors
+	return ;
 	vertices.push_back(r);
 	vertices.push_back(g);
 	vertices.push_back(b);
@@ -583,29 +852,19 @@ static void	loadIndices(char **explode, std::vector<unsigned int> &vertex_indice
 	char **yindices = ft_strsplit(explode[2], '/'); 
 	char **zindices = ft_strsplit(explode[3], '/');
 
-/*
-	indices.push_back(atoi(explode[1]) - 1);
-	indices.push_back(atoi(explode[2]) - 1);
-	indices.push_back(atoi(explode[3]) - 1);
-	if (explode[4])
-	{
-		indices.push_back(atoi(explode[1]) - 1);
-		indices.push_back(atoi(explode[3]) - 1);
-		indices.push_back(atoi(explode[4]) - 1);
-	}
-*/
-
+	printf("push vertex indices\n");
 	vertex_indices.push_back(atoi(xindices[0]) - 1);
 	vertex_indices.push_back(atoi(yindices[0]) - 1);
 	vertex_indices.push_back(atoi(zindices[0]) - 1);
 
 	if (xindices[1] && xindices[2]) //check if there is 2 / /
 	{
-		normal_indices.push_back(atoi(xindices[2]) - 1);
+		printf("push normal indices\n");
+/*		normal_indices.push_back(atoi(xindices[2]) - 1);
 		normal_indices.push_back(atoi(yindices[2]) - 1);
 		normal_indices.push_back(atoi(zindices[2]) - 1);
+*/
 	}
-
 	if (explode[4])
 	{
 		char **windices = ft_strsplit(explode[4], '/');
@@ -616,9 +875,10 @@ static void	loadIndices(char **explode, std::vector<unsigned int> &vertex_indice
 
 		if (xindices[1] && xindices[2]) //check if there is 2 / /
 		{
-			normal_indices.push_back(atoi(xindices[2]) - 1);
+/*			normal_indices.push_back(atoi(xindices[2]) - 1);
 			normal_indices.push_back(atoi(zindices[2]) - 1);
 			normal_indices.push_back(atoi(windices[2]) - 1);
+*/
 		}
 		free_double_pointer(windices);
 	}
@@ -641,8 +901,8 @@ void	Model::loadData(char *path)
 		{
 			explode = ft_strsplit(line.c_str(), ' ');
 //this will load colors to normals from loadVertices
-			if (strcmp(explode[0], "vn") == 0)
-				loadVectors(normals, explode);
+//			if (strcmp(explode[0], "vn") == 0)
+//				loadVectors(normals, explode);
 			if (strcmp(explode[0], "v") == 0)
 				loadVectors(vertices, explode);
 			else if (strcmp(explode[0], "f") == 0)
@@ -651,9 +911,74 @@ void	Model::loadData(char *path)
 		}
 	}
 	offset_to_normals = vertices.size() * sizeof(float);
-	pushBackNormals();
+//NO NORMAS FOR NOW
+//	pushBackNormals();
 	printf("file read\n");
 }
+
+void	Model::initBuffers()
+{
+
+	unsigned int EBO;
+
+	glGenVertexArrays(1, &VAO);
+
+	glGenBuffers(1, &VBO); // generates 1 buffer, which we can reference throug VBO
+	glGenBuffers(1, &EBO);
+//put in the midddle
+   glBindVertexArray(VAO);
+//
+
+//	binds buffer to a type. GL_ARRAY_BUFFER - buffer type of the vertex buffer object
+	glBindBuffer(GL_ARRAY_BUFFER, VBO); // after this each time we call GL_ARRAY_BUFFER, VBO will be called
+//	this function loads vertices into VBO. (it knows it's vbo, because it is bound to the GL_ARRAY
+//	_BUFFER. GL_STATIC_DRAW is specified for optimization. could be DYNAMIC (data changes), could be STREAM (data is used not a lot)
+	glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), &vertices[0], GL_STATIC_DRAW);
+
+
+
+	if (vertex_indices.size())
+	{
+		printf("Drawing according to indices\n");
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * vertex_indices.size(), &vertex_indices[0], GL_STATIC_DRAW);
+	}
+
+		//because vec3			//how many bytes in a line/line = 1 vertex
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void *) 0);
+	glEnableVertexAttribArray(0); // 0 = location of the vertex attribute
+// color  //how much does location = 1 take space in a line			  //offset for the second location
+
+
+/*	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void *) (3 * sizeof(float)));
+	glEnableVertexAttribArray(1); // 1 = location of the vertex attribute
+
+//add normals for this
+
+	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void *)offset_to_normals);
+	glEnableVertexAttribArray(2);
+*/
+	printf("Buffers enabled\n");
+}
+
+
+void	Model::draw()
+{
+	if (vertex_indices.size())
+	{
+		numberoffloats = vertex_indices.size(); 
+		printf("numberoffloats is %d\n", numberoffloats);
+		glDrawElements(GL_TRIANGLES, round(numberoffloats), GL_UNSIGNED_INT, 0);
+	}
+	else
+	{
+		numberoffloats = vertices.size();
+		glDrawArrays(GL_TRIANGLES, 0, round(numberoffloats));
+	}
+
+}
+
+
 
 
 void	printOpbject(Model &myModel)
@@ -692,7 +1017,7 @@ unsigned int	compileShader(const unsigned int &type, const char* &source)
 							// GL_VERTEX_SAHDER is a new argument;
 
 	// atach shader source to the shader object so we can pass only object to compiler
-				  //1 string               //ignore
+				  //1 string			   //ignore
 	glShaderSource(thisShader, 1, &source, NULL); // atach
 	glCompileShader(thisShader);
 	
@@ -750,8 +1075,8 @@ Shader::Shader(std::vector<const char *>shaders/*const char *vertex, const char 
 	glGetProgramiv(ID, GL_COMPILE_STATUS, &success);
 	if(!success)
 	{
-	    glGetShaderInfoLog(fragmentShader, 512, NULL, infoLog);
-	    std::cout << "ERROR::SHADER::PROGRAM::COMPILATION_FAILED\n" << infoLog << std::endl;
+		glGetShaderInfoLog(fragmentShader, 512, NULL, infoLog);
+		std::cout << "ERROR::SHADER::PROGRAM::COMPILATION_FAILED\n" << infoLog << std::endl;
 	}
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -762,237 +1087,178 @@ Shader::Shader(std::vector<const char *>shaders/*const char *vertex, const char 
 		glDeleteShader(geometryShader);
 }
 
+class	OpenGL
+{
+public:
+	OpenGL() {
+//		GLFW is a library that manages operation system specific tasks, that OpenGL
+//		abstracts itself from. GLFW implements the specifications of OpenGL. It allows
+//		us to create window context, manage user input, define window parameters.
+		glfwInit();
+		glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+		glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+
+//		must do in mac, othrwise window == NULL
+		glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+
+//		glfwWindowHints configure the options that we specify. major version = 3, minor version = 3,
+//		Profile = core. Unlike Immediate mode, core profile is harder to use but allows for more flexibility
+//		Immediate mode hides functionality behind curtains
+		glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+
+
+//		this function returns window object. inside this object
+//		will be all the windowing data. it will be used by other functions
+		width = height = 600;
+		window = glfwCreateWindow(width, height, "Learn OpenGL", NULL, NULL);
+
+		if (window == NULL)
+		{
+			glfwTerminate();
+			throw "Couldn't open window";
+		}
+
+//		without this glad fails
+		glfwMakeContextCurrent(window);
+
+//		GLAD is a library that loads implementations of OpenGL
+//		functions written by graphics card manufacturers.
+//		Otherwise it would be hard to do by myself
+//		Glad should be initialized before calling any OpenGL function
+		if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
+		{
+			throw "GLAD failed";
+		}
+		glEnable(GL_DEPTH_TEST);
+
+//		this transforms 0,5 , 0.5 to 300, 300 behind the scenes
+		glViewport(0, 0, width, height);
+
+//		this function is called every time the window is resized.
+//		we have to implement the framebuffer_size_callback func.
+//		must be after glfwInint() and before render loop
+		glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+		glfwSetCursorPosCallback(window, cursor_position_callback);
+		glfwSetKeyCallback(window, key_callback);	
+
+		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+	}
+	GLFWwindow *window;
+	int width;
+	int height;
+};
+
+class	Camera
+{
+public:
+	Camera(){};
+	vec4 pos{0, 4, 15, 0};
+	vec4 basex{0.2, 0, 0, 0};
+	vec4 basez{0, 0, -0.2, 0};
+
+	mat4	yRotate{
+	1.0f, 0.0f, 0.0f, 0.0f,
+	0.0f, 1.0f, 0.0f, 0.0f,
+	0.0f, 0.0f, 1.0f, 0.0f,
+	0.0f, 0.0f, 0.0f, 1.0f
+		};
+
+	mat4	xRotate{
+	1.0f, 0.0f, 0.0f, 0.0f,
+	0.0f, 1.0f, 0.0f, 0.0f,
+	0.0f, 0.0f, 1.0f, 0.0f,
+	0.0f, 0.0f, 0.0f, 1.0f
+		};
+};
+
+Camera cam;
+
 
 int	main(int argc, char **argv)
 {
-	srand(0);
-//	GLFW is a library that manages operation-//system specific tasks, that OpenGL
-//	abstracts itself from. GLFW implements the specifications of OpenGL. It allows
-//	us to create window context, manage user input, define window parameters.
-
-	glfwInit();
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-	
-//must do in mac, othrwise window == NULL
-	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-
-	Model myModel;
-
-	if (argc == 2)
-		myModel.loadData(argv[1]);
-
-//	printOpbject(myModel);
-
-
-/*
-	glfwWindowHints configure the options that we specify. major version = 3, minor version = 3,
-	Profile = core. Unlike Immediate mode, core profile is harder to use but allows for more flexibility
-	Immediate mode hides functionality behind curtains
-*/
-	GLFWwindow *window = glfwCreateWindow(600, 600, "Learn OpenGL", NULL, NULL);
-
-
-//	this function returns window object. inside this object will be all the
-//	windowing data. it will be used by other functions
-
-	if (window == NULL)
-	{
-		std::cout << "Couldn't open window" << std::endl;
-		glfwTerminate();
-		return (-1);
+	if (argc == 1) {
+		printf("Need input\n");
+		return (0);
 	}
 
-//	without this glad fails
-	glfwMakeContextCurrent(window);
-
-
-//	GLAD is a library that loads implementations of OpenGL functions written by graphics card manufacturers
-//	otherwise it would be hard to do by myself
-//	Glad should be initialized before calling any OpenGL
-//	function
-	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
-	{
-		std::cout << "GLAD FAILED\n" << std::endl;
-		return (-1);
-	}
-	// glViewport tells OpenGL the size of the rendering window
-//	this transforms 0,5 , 0.5 to 300, 300 behind the scenes
-	    glEnable(GL_DEPTH_TEST);
-	glViewport(0, 0, 600, 600);
-
-
-//	this function is called every time the window is resize.
-//	we have to implement the framebuffer_size_callback func.
-//	must be after glfwInint() and before render loop
-
-	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
-	glfwSetCursorPosCallback(window, cursor_position_callback);
-        glfwSetKeyCallback(window, key_callback);
-
-
-//	coordinates will be transformed via data in glViewport() later, to screen coordinates
-
-
-//	these coordinates will be bound(?) with the buffre object, which will be sent to the GPU.
-//	after that, the GPU will have almost instant acces to the data "in" the buffer
-
-//comment to make global
-/*
-	float	vertices[] = {
-	-0.5f, -0.5f, 0,
-	0.5f, -0.5f, 0,
-	0, 0.5, 0
-			};
-*/
-
-
-	unsigned int VBO, VAO, EBO;
-
-	glGenVertexArrays(1, &VAO);
-
-	glGenBuffers(1, &VBO); // generates 1 buffer, which we can reference throug VBO
-	glGenBuffers(1, &EBO);
-//put in the midddle
-   glBindVertexArray(VAO);
-//
-
-//	binds buffer to a type. GL_ARRAY_BUFFER - buffer type of the vertex buffer object
-	glBindBuffer(GL_ARRAY_BUFFER, VBO); // after this each time we call GL_ARRAY_BUFFER, VBO will be called
-
-//	this function loads vertices into VBO. (it knows it's vbo, because it is bound to the GL_ARRAY
-//	_BUFFER. GL_STATIC_DRAW is specified for optimization. could be DYNAMIC (data changes), could be STREAM (data is used not a lot)
-	glBufferData(GL_ARRAY_BUFFER, /*sizeof(vertices), */myModel.vertices.size() * sizeof(float), &myModel.vertices[0] /*vertices*/, GL_STATIC_DRAW);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-
-
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, /*sizeof(indices)*/sizeof(unsigned int) * myModel.vertex_indices.size(), &myModel.vertex_indices[0] /*indices*/, GL_STATIC_DRAW);
-
-
-			//because vec3			//how many bytes in a line/line = 1 vertex
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void *) 0);
-	glEnableVertexAttribArray(0); // 0 = location of the vertex attribute
-
-// color  //how much does location = 1 take space in a line	          //offset for the second location
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void *) (3 * sizeof(float)));
-	glEnableVertexAttribArray(1); // 1 = location of the vertex attribute
-
-//add normals for this
-
-	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void *)/*(48 * sizeof(float)) */(myModel.offset_to_normals));
-	glEnableVertexAttribArray(2);
-
-	std::vector<const char *>shaders{vertexShaderSource, fragmentShaderSource/*, geometryShaderSource*/};
+	OpenGL	opengl;
+	Model	myModel;
+	myModel.loadData(argv[1]);
+	myModel.initBuffers();
+	myModel.initConections();
+	std::vector<const char *>shaders{vertexShaderSource, fragmentShaderSource, geometryShaderSource1};
 	Shader myShader(shaders);
-
-
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
- 
-    // You can unbind the VAO afterwards so other VAO calls won't accidentally modify this VAO, but this rarely happens. Modifying other
-    // VAOs requires a call to glBindVertexArray anyways so we generally don't unbind VAOs (nor VBOs) when it's not directly necessary.
-
-    glBindVertexArray(0); 	//unbinds VAO. comment this if you want to tomment glBindVertexArray in llop
-//end
-
-
-//		int newVertexLocation = glGetUniformLocation(shaderProgram, "f");
-//		glUseProgram(shaderProgram);
-
-
-	//render loop
-	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-
-
-	while (!glfwWindowShouldClose(window))
+	printf("shaders compiled\n");
+	while (!glfwWindowShouldClose(opengl.window))
 	{
-		processInput(window);
 
-		// glClearColor(0.2f, 0.3f, 0.3f, 1.0f); state setting function
-//		glClear(GL_COLOR_BUFFER_BIT); //state using function
+////////////////////////////////////////////////
+		// only after init conections
+		// will draw wave model
+		myModel.updateVertices();
+/////////////////////////////////////////////////////////////
+		processInput(opengl.window);
+
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 //start setting up uniform variable
 
 		int newVertexLocation = glGetUniformLocation(myShader.ID, "yRotate");
-		glUniformMatrix4fv(newVertexLocation, 1, GL_TRUE, yRotate);
+		glUniformMatrix4fv(newVertexLocation, 1, GL_TRUE, cam.yRotate);
 
 		int newVertexLocation2 = glGetUniformLocation(myShader.ID, "xRotate");
-		glUniformMatrix4fv(newVertexLocation2, 1, GL_TRUE, xRotate);
+		glUniformMatrix4fv(newVertexLocation2, 1, GL_TRUE, cam.xRotate);
 
 
 		int newVertexLocation1 = glGetUniformLocation(myShader.ID, "P");
 		glUniformMatrix4fv(newVertexLocation1, 1, GL_TRUE, projectionMatrix);
 
+		mat4 translate;
+
+
+		translate[3] = -cam.pos[0];
+		translate[7] = -cam.pos[1];
+		translate[11] = -cam.pos[2];
+
+		int newVertexLocation6 = glGetUniformLocation(myShader.ID, "translate");
+		glUniformMatrix4fv(newVertexLocation6, 1, GL_TRUE, translate);
+		mat4 b =  cam.xRotate * cam.yRotate;
+		mat4 c = projectionMatrix * b * translate;  
+
+		mat4 matrix = c;
+
+		int newVertexLocation7 = glGetUniformLocation(myShader.ID, "matrix");
+		glUniformMatrix4fv(newVertexLocation7, 1, GL_TRUE, matrix);
+
+		int newVertexLocation8 = glGetUniformLocation(myShader.ID, "Rotate");
+		glUniformMatrix4fv(newVertexLocation8, 1, GL_TRUE, b);
+
+
+
+
 		int newVertexLocation5 = glGetUniformLocation(myShader.ID, "p");
-		glUniform4f(newVertexLocation5, campos[0], campos[1], campos[2], campos[3]);
-
-		double time = glfwGetTime();
-
-		mat4 constantRotation;
-
-		constantRotation[0] = cos(time * 70/ (float)175);
-		constantRotation[2] = sin(time * 70  / (float)175);
-		constantRotation[8] = -sin(time * 70 / (float)175);
-		constantRotation[10] = cos(time * 70 / (float)175);
-
-
-		int newVertexLocation6 = glGetUniformLocation(myShader.ID, "cR");
-		glUniformMatrix4fv(newVertexLocation6, 1, GL_TRUE, constantRotation);
+		glUniform4f(newVertexLocation5, cam.pos[0], cam.pos[1], cam.pos[2], cam.pos[3]);
 
 		glUseProgram(myShader.ID);
 
-//end
 
+		// this draws according to indices, or 1 after 1, depending on indices.size()
+		printf("drawing\n");
+		myModel.draw();
 
-//        glUseProgram(shaderProgram);
-        glBindVertexArray(VAO); // seeing as we only have a single VAO there's no need to bind it every time, but we'll do so to keep things a bit more organized
-
-
-//	       glDrawArrays(GL_TRIANGLES, 0, 43);
-
-//	       glDrawArrays(GL_POINTS, 0, numberoffloats);
-
-
-	
-//for 42
-//		glDrawElements(GL_TRIANGLES, 83, GL_UNSIGNED_INT, 0);
-//fo teapot
-
-
-//		glDrawElements(GL_TRIANGLES, 9999, GL_UNSIGNED_INT, 0);
-
-//		if (numberoffloats < myModel.indices.size())
-//			numberoffloats += 20 /*6319 * 3*/;
-
-//uncomment for argument model
-//		numberoffloats = myModel.vertex_indices.size();
-//		printf("here1\n");
-		numberoffloats = /*sizeof(indices) / sizeof(indices[0]);*/myModel.vertex_indices.size();
-
-//		printf("here3\n");
-		glDrawElements(GL_TRIANGLES, round(numberoffloats) /*6319* 3*//* * 3 * 1*/, GL_UNSIGNED_INT, 0);
-//		printf("here2\n");
-
-		//put image to window
-		//prevents flickering
-		glfwSwapBuffers(window);
-		//checks for input
-		//updates the window state
-		//corresponding to the input
-		//and the defined behaviour
-		//after such input
+		glfwSwapBuffers(opengl.window);
 		glfwPollEvents();
 	}
-	glDeleteVertexArrays(1, &VAO);
-	glDeleteBuffers(1, &VBO);
+	glDeleteVertexArrays(1, &myModel.VAO);
+	glDeleteBuffers(1, &myModel.VBO);
 
 	if (argc == 2)
 //		delete object;
 	system("leaks -q a.out");
-    // glfw: terminate, clearing all previously allocated GLFW resources.
-    // ------------------------------------------------------------------
+	// glfw: terminate, clearing all previously allocated GLFW resources.
+	// ------------------------------------------------------------------
 
-    glfwTerminate();
+	glfwTerminate();
 }
 
 
@@ -1007,140 +1273,35 @@ void	framebuffer_size_callback(GLFWwindow *window, int w, int h)
 {
 	glViewport(0, 0, w, h);
 }
-
-float	yaw = 0, pitch = 0;
-
-
-vec4		rotate(vec4 ray, vec4 angle)
-{
-	vec4 ret;
-	vec4 cxcycz;
-	vec4 sxsysz;
-	vec4 opt;
-	vec4 row[3];
-
-	if (angle[0] == 0 && angle[1] == 0 && angle[2] == 0)
-		return (ray);
-	cxcycz = vec4(cos(angle[0]), cos(angle[1]), cos(angle[2]), 0);
-
-	sxsysz = vec4(sin(angle[0]), sin(angle[1]), sin(angle[2]), 0);
-
-	opt = vec4(cxcycz[2] * sxsysz[0],
-	cxcycz[2] * cxcycz[0], sxsysz[2] * sxsysz[1], 0);
-
-	row[0] = vec4(cxcycz[2] * cxcycz[1],  -sxsysz[2] * cxcycz[0]
-	+ opt[0] * sxsysz[1], sxsysz[2] * sxsysz[0] + opt[1] * sxsysz[1], 0);
-
-	row[1] = vec4(sxsysz[2] * cxcycz[1], opt[1]
-	+ opt[2] * sxsysz[0], -opt[0] + opt[2] * cxcycz[0], 0);
-
-	row[2] = vec4(-sxsysz[1], cxcycz[1] * sxsysz[0], cxcycz[1] * cxcycz[0], 0);
-
-	ret = vec4(row[0] * ray, row[1] * ray, row[2] * ray, 0);
-
-	return (ret);
-}
-
-
 void	key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
 //	printf("action is %d\n", action);
 
 	if (action == 0)
 		return;
-/*
-	mat4 invertedy = yRotate.invert();
-	vec4 difx = invertedy * cambasex;
-	vec4 difz = invertedy * cambasez;
+
+	mat4 invertedx = cam.xRotate.invert();
+	mat4 invertedy = cam.yRotate.invert();
 
 
-//this changes in the standart coordinates. should
-//change in the new coordinates
-
-	mat4 invertedx = xRotate.invert();
-
-	difx = invertedx * difx;
-	difz = invertedx * difz;
-
-*/
-
-
-
-	mat4 invertedx = xRotate.invert();
-
-	vec4 difx = invertedx * cambasex;
-	vec4 difz = invertedx * cambasez;
-
-
-	mat4 invertedy = yRotate.invert();
-	difx = invertedy * difx;
-	difz = invertedy * difz;
-
-
-
-
-//	vec4 difz(sin(yaw) * cos(pitch), sin(pitch), -cos(yaw) * cos(pitch), 0);
-//	vec4 difz(cos(yaw) * cos(pitch), sin(pitch), sin(yaw) * cos(pitch), 0);
-
-//	vec4 difx = rotate(cambasex, vec4(yaw, pitch, 0, 0));
-
-//	vec4 difz = rotate(cambasez, vec4(yaw, pitch, 0, 0));
+	vec4 difx = invertedy * (invertedx * cam.basex);
+	vec4 difz = invertedy * (invertedx * cam.basez);
 
 	if (GLFW_KEY_W == key)
 	{
-//		translate[3] += 0.1;
-//		translate[7] += 0.1;
-
-
-//		normal += xRotate * temp;
-//		normal = normal + temp;
-		campos = campos + difz;
+		cam.pos = cam.pos + difz;
 	}
 	else if (GLFW_KEY_S == key)
 	{
-		campos = campos - difz;
+		cam.pos = cam.pos - difz;
 	}
 	else if (GLFW_KEY_A == key)
 	{
-		campos = campos - difx;
+		cam.pos = cam.pos - difx;
 	}
 	else if (GLFW_KEY_D == key)
 	{
-		campos = campos + difx;
-	}
-	else if (GLFW_KEY_UP == key)
-	{
-		anglex += 2;
-		xRotate[5] = cos(anglex / (float)175);
-		xRotate[6] = sin(anglex / (float)175);
-		xRotate[9] = -sin(anglex / (float)175);
-		xRotate[10] = cos(anglex / (float)175);
-	
-	}
-	else if (GLFW_KEY_DOWN == key)
-	{
-		anglex -= 2;
-		xRotate[5] = cos(anglex / (float)175);
-		xRotate[6] = sin(anglex / (float)175);
-		xRotate[9] = -sin(anglex / (float)175);
-		xRotate[10] = cos(anglex / (float)175);
-	}
-	else if (GLFW_KEY_LEFT == key)
-	{
-		angley--;
-		yRotate[0] = cos(-angley / (float)175);
-		yRotate[2] = sin(-angley / (float)175);
-		yRotate[8] = -sin(-angley / (float)175);
-		yRotate[10] = cos(-angley / (float)175);
-	}
-
-	else if (GLFW_KEY_RIGHT == key)
-	{
-		angley++;
-		yRotate[0] = -cos(angley / (float)175);
-		yRotate[2] = -sin(angley / (float)175);
-		yRotate[8] = -sin(angley / (float)175);
-		yRotate[10] = cos(angley / (float)175);
+		cam.pos = cam.pos + difx;
 	}
 	if (numberoffloats < 6319 * 3) {
 	if (GLFW_KEY_R == key)
@@ -1158,7 +1319,7 @@ void	key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 
 	else
 		std::cout << "unknown key" << std::endl;
-//	printf("campos is %f, %f, %f, %f\n", campos[0], campos[1], campos[2], campos[3]);
+//	printf("cam.pos is %f, %f, %f, %f\n", cam.pos[0], cam.pos[1], cam.pos[2], cam.pos[3]);
 //	printf("normal is %f, %f, %f, %f\n", difz[0], difz[1], difz[2], difz[3]);
 
 }
@@ -1175,21 +1336,15 @@ void cursor_position_callback(GLFWwindow* window, double x, double y)
 	y = y / (float)100;
 //	printf("after translate is %f, %f\n", x, y);
 
-	yaw = y;
-	pitch = x;
-
-//	for debugging
+	//	for debugging
 
 
-	mat4 invertedx = xRotate.invert();
-
-	vec4 difx = invertedx * cambasex;
-	vec4 difz = invertedx * cambasez;
+	mat4 invertedx = cam.xRotate.invert();
+	mat4 invertedy = cam.yRotate.invert();
 
 
-	mat4 invertedy = yRotate.invert();
-	difx = invertedy * difx;
-	difz = invertedy * difz;
+	vec4 difx = invertedy * (invertedx * cam.basex);
+	vec4 difz = invertedy * (invertedx * cam.basez);
 
 
 
@@ -1200,18 +1355,18 @@ void cursor_position_callback(GLFWwindow* window, double x, double y)
 
 //y rotation
 
-	yRotate[0] = cos(x);
-	yRotate[2] = sin(x);
-	yRotate[8] = -sin(x);
-	yRotate[10] = cos(x);
+	cam.yRotate[0] = cos(x);
+	cam.yRotate[2] = sin(x);
+	cam.yRotate[8] = -sin(x);
+	cam.yRotate[10] = cos(x);
 
 // x rotation
 
 
-	xRotate[5] = cos(y);
-	xRotate[6] = -sin(y);
-	xRotate[9] = sin(y);
-	xRotate[10] = cos(y);
+	cam.xRotate[5] = cos(y);
+	cam.xRotate[6] = -sin(y);
+	cam.xRotate[9] = sin(y);
+	cam.xRotate[10] = cos(y);
 }
 
 
