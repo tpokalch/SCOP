@@ -12,4 +12,4 @@ Beware! Project under construction ahead.
 Click on video below:
 
 
-[![rtdemo](https://i.imgur.com/CDjvOov.png)](https://www.youtube.com/watch?v=5KJQpZ_xJwE&)
+[![rtdemo](https://img.youtube.com/vi/5KJQpZ_xJwE/0.jpg)](https://www.youtube.com/watch?v=5KJQpZ_xJwE&)
