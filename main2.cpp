@@ -8,54 +8,6 @@
 #include <vector>
 #include <array>
 
-/*
-float vertices[] = {
--5, -5, 5, 1, 0, 0, //0, 1, 0,
-5, -5, 5, 1, 0, 0, //0, 1, 0,
-5, 5, 5, 1, 0, 0, //0, 1, 0,
--5, 5, 5, 1, 0, 0, //0, 1, 0,
-
--5, -5, -5, 0, 0, 1, //1, 0, 0,
-5, -5, -5, 0, 0, 1, //1, 0, 0,
-5, 5, -5, 0, 0, 1, //1, 0, 0,
--5, 5, -5, 0, 0, 1, //1, 0, 0
-
-//,
-0, 1, 0,
-0, 1, 0,
-0, 1, 0,
-0, 1, 0,
-
-1, 0, 0,
-1, 0, 0,
-1, 0, 0, 
-1, 0, 0
-
-};
-
-unsigned int indices[] = {
-
-0, 1, 2,
-2, 3, 0,
-
-0, 1, 4,
-1, 4, 5,
-
-1, 2, 5,
-2, 5, 6,
-
-0, 4, 3,
-4, 3, 7,
-
-4, 5, 6,
-6, 7, 4,
-
-3, 6, 7,
-6, 3, 2
-
-};
-*/
-
 void	framebuffer_size_callback(GLFWwindow *window, int w, int h);
 void	processInput(GLFWwindow *window);
 void	cursor_position_callback(GLFWwindow* window, double x, double y);
@@ -73,6 +25,7 @@ const char *geometryShaderSource =
 		"EndPrimitive();\n"
 	"}\0";
 */
+
 ////////////////////////////////////////////////////////////////////////////////////
 	const char *vertexShaderSource =
 			"#version 330 core\n" //the version matches if GLSL matches the version of OpenGL
@@ -87,29 +40,27 @@ const char *geometryShaderSource =
 			"layout (location = 2) in vec3 aNormal;\n"
 //comment to test if compiles geomShader
 			"out vec3 outColor;\n"
-			"uniform mat4 P;\n"
-			"uniform mat4 xRotate;\n"
-			"uniform mat4 yRotate;\n"
-			"uniform mat4 Rotate;\n"	
-			"uniform mat4 cR;\n"
-			"uniform mat4 translate;\n"
+			"out vec3 FragPos;\n"
+			"out vec3 Normal;\n"
+			"out vec3 campos;\n"
+
 			"uniform mat4 matrix;\n"
 			"uniform vec4 p;\n"
 
 //for geomShader1
 
-
+/*
 "out VS_OUT {\n" 
-"	mat4 matrix;\n"
+"	vec3 color;\n"
 "} vs_out;\n"
-
+*/
 
 //for other geom shader
-/*
+
 "out VS_OUT {\n" 
 "	vec4 normalEnd;\n"
 "} vs_out;\n"
-*/
+
 
 
 //need to get address from render loop
@@ -118,28 +69,34 @@ const char *geometryShaderSource =
 			"void main()\n"
 			"{\n"
 				"gl_Position =  (vec4(aPos, 1));\n"
-				"vs_out.matrix = matrix;\n"
+
+//				"vs_out.matrix = matrix;\n"
+	//			"vs_out.color = color;\n"
 				//if straight to fragment shader
-				"outColor = vec3(1, 1, 1);\n"
-//				"gl_Position = matrix * gl_Position;\n"
+
+				"outColor = color;\n"
+				"gl_Position = matrix * gl_Position;\n"
+				"FragPos = aPos;\n"
+				"Normal = aNormal;\n"
+				"campos = vec3(p);\n"
+
 				/////////////
 //				"vs_out.normalEnd =  matrix * (vec4(aPos + aNormal * 0.4, 1))\n;"
-
-//				"vs_out.light = matrix * (vec4(100, 100, 100, 1));\n"
 
 #if 0
 				"vec3 lightPos = vec3(100, 100, 100);\n"
 				"vec3 hitli = lightPos - aPos;\n"
 				"hitli = normalize(hitli);\n"
 				"float brightness = max(0.3, dot(aNormal, hitli));\n"
-				"outColor = vec3(0, 0.5, 1) * brightness;\n"
-
+				"outColor = color * brightness;\n"
+				"if (brightness < 0.3)\n"
+				"	return ;\n" //no light spots when to dark
+////////////////////////// for light spots
 
 				"vec3 hitcam = normalize(vec3(p) - aPos);\n"
 				"vec3 newNormal = dot(hitcam, aNormal) * aNormal;\n"
 				"vec3 reflray = newNormal + (newNormal - hitcam);\n"
 
-				"hitli = normalize(hitli);\n"
 
 				"reflray = normalize(reflray);\n"
 				"float coef = dot(reflray, hitli);\n"
@@ -153,8 +110,10 @@ const char *geometryShaderSource =
 				"coef = coef * coef;\n"
 				"coef = coef * coef;\n"
 				"coef = coef * coef;\n"
-				"coef = coef * coef;\n"
+
+
 				"outColor = (1 -coef) * outColor + (coef )* vec3(1, 1, 1);\n"
+
 #endif
 			"}\0";
 
@@ -166,10 +125,71 @@ const char *geometryShaderSource =
 //to enable geometry shader comment outColor = color in vertex shader and change
 //custom color to 1 1 1 1 color in fragment shader
 //also compile this shader with the sahder program
-//	this shader will draw normals!!!
+//	this shader program will draw normals!!!
 
+
+const char *vertexShaderSourceNormal = 
+
+"#version 330 core\n"
+"layout (location = 0) in vec3 aPos;\n"
+"layout (location = 1) in vec3 color;\n"
+"layout (location = 2) in vec3 aNormal;\n"
+
+"uniform mat4 matrix;\n"
+"uniform vec4 p;\n"
+
+
+"out VS_OUT {\n" 
+"	vec4 normalEnd;\n"
+"	vec3 outColor;\n"
+"} vs_out;\n"
+
+"void main()\n"
+"{\n"
+	"gl_Position = matrix * vec4(aPos, 1);\n"
+	"vs_out.normalEnd =  matrix * (vec4(aPos + aNormal * 0.4, 1))\n;"
+	"vs_out.outColor =  vec3(1, 0, 0)\n;"
+
+///////////////for lighting
 /*
-const char *geometryShaderSource1 = 
+	"vec3 lightPos = vec3(100, 100, 100);\n"
+	"vec3 hitli = lightPos - aPos;\n"
+	"hitli = normalize(hitli);\n"
+	"float brightness = max(0.3, dot(aNormal, hitli));\n"
+	"vs_out.outColor = color * brightness;\n"
+
+/////////////////////for light spots
+
+	"if (brightness == 0.3)\n"
+	"	return ;\n"
+	"vec3 hitcam = normalize(vec3(p) - aPos);\n"
+	"vec3 newNormal = dot(hitcam, aNormal) * aNormal;\n"
+	"vec3 reflray = newNormal + (newNormal - hitcam);\n"
+
+
+	"reflray = normalize(reflray);\n"
+	"float coef = dot(reflray, hitli);\n"
+	"if (coef < 0)\n"
+	"{\n"
+		"return ;\n"
+	"}\n"
+
+
+	"coef = coef * coef;\n"
+	"coef = coef * coef;\n"
+	"coef = coef * coef;\n"
+	"coef = coef * coef;\n"
+
+
+	"vs_out.outColor = (1 -coef) * vs_out.outColor + (coef )* vec3(1, 1, 1);\n"
+*/
+"}\0";
+
+
+
+
+const char *geometryShaderSourceNormal = 
+
 "#version 330 core\n"
 "layout (triangles) in;\n"
 "layout (line_strip, max_vertices = 6) out;\n"
@@ -177,18 +197,17 @@ const char *geometryShaderSource1 =
 
 "in VS_OUT {\n"
 "	vec4 normalEnd;\n"
+"	vec3 outColor;\n"
 "} gs_in[];\n"
-
-//"const float MAGNITUDE = 0.004;\n"
 
 "void GenerateLine(int index)\n"
 "{\n"
 "	gl_Position = gl_in[index].gl_Position;\n"
-"	outColor = vec3(1, 1, 1);\n"//need to specify color for every vertex 
+"	outColor = gs_in[index].outColor;\n"//need to specify color for every vertex 
 "	EmitVertex();\n"
 
 "	gl_Position = vec4(gs_in[index].normalEnd);\n"
-"	outColor = vec3(1, 1, 1);\n"//here too
+"	outColor = gs_in[index].outColor;\n"//here too
 "	EmitVertex();\n"
 
 "	EndPrimitive();\n"
@@ -200,18 +219,36 @@ const char *geometryShaderSource1 =
 "	GenerateLine(1);\n"
 "	GenerateLine(2);\n"
 "}\0";
-*/
+
+const char *fragmentShaderSourceNormal =
+	"#version 330 core\n"
+	"out vec4 FragColor;\n"
+
+	"in vec3 outColor;\n"
+
+	"void main()\n"
+	"{\n"
+		"FragColor = vec4(outColor, 1);\n"
+	"}\0";
+
+
+
 ///////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////
 //this shader calculates normals. takes vertice's coordinates in global space and the matrix.
+
+/*
 const char *geometryShaderSource1 = 
 "#version 330 core\n"
 "layout (triangles) in;\n"
 "layout (triangle_strip, max_vertices = 3) out;\n"
 "out vec3 outColor;\n"
 
+"uniform mat4 matrix;\n"
+
 "in VS_OUT {\n"
-"	mat4 matrix;\n"
+//"	mat4 matrix;\n"
+"	vec3 color;\n"
 "} gs_in[];\n"
 
 
@@ -219,8 +256,8 @@ const char *geometryShaderSource1 =
 "{\n"
 "	vec3 hitli = normalize(vec3(100, 100, 100) - vec3(gl_in[index].gl_Position));\n"
 "	float bri = max(abs(dot(hitli, normal)), 0.3);\n"
-"	outColor = vec3(1, 1, 1) * bri;\n"
-"	gl_Position = gs_in[index].matrix * gl_in[index].gl_Position;\n"
+"	outColor = gs_in[index].color * bri;\n"
+"	gl_Position = matrix * gl_in[index].gl_Position;\n"
 "	EmitVertex();\n"
 "}\n"
 
@@ -238,7 +275,7 @@ const char *geometryShaderSource1 =
 
 
 "}\0";
-
+*/
 
 
 //////////////////////////////////////////////////////////////////////
@@ -247,13 +284,59 @@ const char *geometryShaderSource1 =
 				"#version 330 core\n"
 				"out vec4 FragColor;\n" // has to have out vec4 type as output (but vec3 works too?)
 
+				"in vec3 FragPos;\n"
+				"in vec3 Normal;\n"
+				"in vec3 campos;\n"
+
 //geomShader
 //				"in vec3 normal;\n" //from geom shader
 				"in vec3 outColor;\n"
+
 				"void main()\n"
 				"{\n"
-					"FragColor = vec4(outColor, 1);\n"
+
+
+
+				"vec3 Color = outColor;\n"
+
+				"vec3 lightPos = vec3(100, 100, 100);\n"
+				"vec3 hitli = lightPos - FragPos;\n"
+				"hitli = normalize(hitli);\n"
+				"float brightness = dot(Normal, hitli);\n"
+				"brightness = max(0.3, abs(brightness));\n"
+				"Color *= brightness;\n"
+				"FragColor = vec4(Color, 1);\n"
+
+
+////////////////////////// for light spots
+
+				"vec3 hitcam = normalize(campos - FragPos);\n"
+				"vec3 newNormal = dot(hitcam, Normal) * Normal;\n"
+				"vec3 reflray = newNormal + (newNormal - hitcam);\n"
+
+
+				"reflray = normalize(reflray);\n"
+				"float coef = dot(reflray, hitli);\n"
+				"if (coef < 0)\n"
+				"{\n"
+					"FragColor = vec4(Color, 1);\n"
+					"return ;\n"
+				"}\n"
+
+
+				"coef = coef * coef;\n"
+				"coef = coef * coef;\n"
+				"coef = coef * coef;\n"
+				"coef = coef * coef;\n"
+				"coef = coef * coef;\n"
+
+
+
+				"FragColor = vec4((1 -coef) * Color + (coef )* vec3(1, 1, 1), 1);\n"
+
+
 				"}\0";
+
 
 
 
@@ -450,6 +533,7 @@ class Model
 	public:
 		void loadData(char *path);
 		void pushBackNormals();
+		void createNormals();
 		void initBuffers();
 		void draw();
 
@@ -463,6 +547,7 @@ class Model
 		unsigned int	VAO;	
 		unsigned int	VBO;
 
+
 //		for physics
 		std::vector<std::vector<int>>	conections;
 		std::vector<std::array<float, 3> > forces;
@@ -474,20 +559,26 @@ class Model
 		std::vector<float> original_vertices;
 		std::vector<std::array<float, 3> >original_forces;
 
-
+		int stride; //stride on vertices (can be 3, or 6 if with rgb colors)
 };
 
 
 void	Model::initConections()
 {
-	conections.resize(lround(vertices.size() / 3));
-	forces.resize(lround(vertices.size() / 3));
-	speeds.resize(lround(vertices.size() / 3));
-	original_vertices = vertices;
+
+	conections.resize(lround(vertices.size() / stride));
+	forces.resize(lround(vertices.size() / stride));
+//	bzero(&forces[0], sizeof(forces) * sizeof(float));
+	speeds.resize(lround(vertices.size() / stride));
+//	bzero(&speeds[0], sizeof(forces) * sizeof(float));
+
+	original_vertices = vertices; // for use in pdateVertices
+
 	printf("vertices size is %lu\n", vertices.size());
 	printf("forces size is %lu\n", forces.size());
 //	return ;
 	for (int i = 0; i < vertex_indices.size(); i += 3)
+
 	{
 		printf("\n\npushing connections\n");
 		printf("i is %d\n", i);
@@ -581,7 +672,7 @@ void	Model::initConections()
 		{
 			printf("%d, ", conections[i][j]);
 		}
-		printf("\n%d vertex is %f, %f, %f", i, vertices[3 * i + 0], vertices[3 * i + 1], vertices[3 * i + 2]);
+//		printf("\n%d vertex is %f, %f, %f", i, vertices[3 * i + 0], vertices[3 * i + 1], vertices[3 * i + 2]);
 	}
 	printf("size of vertices %lu\n", vertices.size());
 	printf("size of indices %lu\n",vertex_indices.size());
@@ -590,7 +681,8 @@ void	Model::initConections()
 
 
 /////////////////////////		INIT FORCES ORIGINAL
-	original_forces.resize(vertices.size() / 3);
+#if 0
+	original_forces.resize(vertices.size() / stride);
 
 	for (int i = 0; i < forces.size(); i++)
 	{
@@ -624,9 +716,12 @@ void	Model::initConections()
 		}
 //		printf("final force on %d vertex is %f, %f, %f\n", i, forces[i][0], forces[i][1], forces[i][2]);
 	}
+#endif
 //	vertices[1200] += 1;
-}
 
+///////////////////////////////////////////
+
+}
 
 void	Model::updateVertices()
 {
@@ -634,8 +729,6 @@ void	Model::updateVertices()
 //	printf("forces size %lu\n", forces.size());
 	for (int i = 0; i < forcessize; i++)
 	{
-
-
 //		printf("creating forces\n");
 //		int index = myModel.vertex_indices[i];
 		int conectionssize = conections[i].size();
@@ -646,26 +739,39 @@ void	Model::updateVertices()
 
 
 
+		int stridei = stride * i;
+
 		for (int j = 0; j < conectionssize; j++)
 		{
 		//	printf("i is %d\n", i);
 //		printf("index is %d\n", index);
 	
+//			this for real approx equation
+
+			int strideconections = stride * conections[i][j];
+
+
 			float original_length[3];
-			original_length[0] = (original_vertices[3 * conections[i][j] + 0] - original_vertices[3 * i + 0]) * 1;
-			original_length[1] = (original_vertices[3 * conections[i][j] + 1] - original_vertices[3 * i + 1]) * 1;
-			original_length[2] = (original_vertices[3 * conections[i][j] + 2] - original_vertices[3 * i + 2]) * 1;
+			original_length[0] = (original_vertices[stride * conections[i][j] + 0] - original_vertices[stride * i + 0]) * 0.8;
+			original_length[1] = (original_vertices[stride * conections[i][j] + 1] - original_vertices[stride * i + 1]) * 0.8;
+			original_length[2] = (original_vertices[stride * conections[i][j] + 2] - original_vertices[stride * i + 2]) * 0.8;
 
 
-			float curent_length[3];
-			curent_length[0] = (vertices[3 * conections[i][j] + 0] - vertices[3 * i + 0]);
-			curent_length[1] = (vertices[3 * conections[i][j] + 1] - vertices[3 * i + 1]);
-			curent_length[2] = (vertices[3 * conections[i][j] + 2] - vertices[3 * i + 2]);
+
+	
 
 
-			forces[i][0] +=  -(original_length[0] - curent_length[0]);
-			forces[i][1] +=  -(original_length[1] - curent_length[1]);
-			forces[i][2] +=  -(original_length[2] - curent_length[2]);
+			forces[i][0] += vertices[strideconections + 0] - vertices[stridei + 0] - original_length[0];
+			forces[i][1] += vertices[strideconections + 1] - vertices[stridei + 1] - original_length[1];
+			forces[i][2] += vertices[strideconections + 2] - vertices[stridei + 2] - original_length[2];
+
+
+//			this is for real wave equation
+/*
+			forces[i][0] += vertices[strideconections + 0] - vertices[stridei + 0];
+			forces[i][1] += vertices[strideconections + 1] - vertices[stridei + 1];
+			forces[i][2] += vertices[strideconections + 2] - vertices[stridei + 2];
+*/
 
 /*			if (index == 1)
 			{
@@ -679,6 +785,7 @@ void	Model::updateVertices()
 
 //	printf("done\n");
 //	return (0);
+//#if 0
 	int speedssize = speeds.size();
 	for (int i = 0; i < speedssize; i++)
 	{
@@ -701,43 +808,258 @@ void	Model::updateVertices()
 
 */
 
-		speeds[i][0] += force[0] * 0.1;
-		speeds[i][1] += force[1] * 0.1;
-		speeds[i][2] += force[2] * 0.1;
+
+
+		speeds[i][0] += force[0] * 0.5;
+		speeds[i][1] += force[1] * 0.5;
+		speeds[i][2] += force[2] * 0.5;
+
+
 //		printf("length of force is %f\n", length_of_force);
 //		printf("%d force is %f, %f, %f\n", i, force[0], force[1], force[2]);
 //		printf("%d speed is %f, %f, %f\n", i, speeds[i][0], speeds[i][1], speeds[i][2]);
 
 
 	}
-
+//#endif
 //	return (0);
 //	printf("speeds done\n");
-	int verticessize = vertices.size() / 3;
+	int verticessize = vertices.size() / stride;
 	for (int i = 0; i < verticessize; i++)
 	{
 		//ith vertex is connected to some j, j+1... other vetices
 //		int index = vertex_indices[i];	
 
+		int stridei = stride * i;
 
-		vertices[i * 3 + 0] += speeds[i][0] * 0.1;
-		vertices[i * 3 + 1] += speeds[i][1] * 0.1;
-		vertices[i * 3 + 2] += speeds[i][2] * 0.1;
+
+		vertices[i * stride + 0] += speeds[i][0] * 0.5;
+		vertices[i * stride + 1] += speeds[i][1] * 0.5;
+		vertices[i * stride + 2] += speeds[i][2] * 0.5;
+
 /*
-		vertices[i * 3 + 0] += forces[i][0] * 0.01;
-		vertices[i * 3 + 1] += forces[i][1] * 0.01;
-		vertices[i * 3 + 2] += forces[i][2] * 0.01;
+		vertices[stridei + 0] += forces[i][0] * 0.01;
+		vertices[stridei + 1] += forces[i][1] * 0.01;
+		vertices[stridei + 2] += forces[i][2] * 0.01;
 */
 
 	}
-//	printf("vertices done\n");
-	glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), &vertices[0], GL_DYNAMIC_DRAW);
+
+/////////////////////////// UPDATE NORMALS
+
+	createNormals();
+/*
+	for (int i = 0; i < vertex_indices.size(); i = i + 3)
+	{
+		int first_index =  vertex_indices[i];
+		int second_index = vertex_indices[i + 1];
+		int third_index =   vertex_indices[i + 2];
+
+		float first_vertex[3];
+		first_vertex[0] = vertices[stride * vertex_indices[i] + 0];
+		first_vertex[1] = vertices[stride * vertex_indices[i] + 1];
+		first_vertex[2] = vertices[stride * vertex_indices[i] + 2];
+
+
+		float second_vertex[3];
+		second_vertex[0] = vertices[stride * vertex_indices[(i + 1)] + 0];
+		second_vertex[1] = vertices[stride * vertex_indices[(i + 1)] + 1];
+		second_vertex[2] = vertices[stride * vertex_indices[(i + 1)] + 2];
+
+		float third_vertex[3];
+		third_vertex[0] = vertices[stride * vertex_indices[(i + 2)] + 0];
+		third_vertex[1] = vertices[stride * vertex_indices[(i + 2)] + 1];
+		third_vertex[2] = vertices[stride * vertex_indices[(i + 2)] + 2];
+
+		float dif1[3];
+		dif1[0] = first_vertex[0] - second_vertex[0];
+		dif1[1] = first_vertex[1] - second_vertex[1];
+		dif1[2] = first_vertex[2] - second_vertex[2];
+
+		float dif2[3];
+		dif2[0] = first_vertex[0] - third_vertex[0];
+		dif2[1] = first_vertex[1] - third_vertex[1];
+		dif2[2] = first_vertex[2] - third_vertex[2];
+
+
+		float normal[3];
+//cross(dif1, dif2)
+		normal[0] = (dif1[1] * dif2[2] - dif1[2] * dif2[1]);
+		normal[1] = (dif1[2] * dif2[0] - dif1[0] * dif2[2]);
+		normal[2] = (dif1[0] * dif2[1] - dif1[1] * dif2[0]);
+
+		float normallen = sqrt(normal[0] * normal[0] + normal[1] * normal[1] + normal[2] * normal[2]);
+
+		normal[0] /= normallen;
+		normal[1] /= normallen;
+		normal[2] /= normallen;
+
+
+//// may need for models that don't have normals
+
+		vertices[offset_to_normals + 3 * first_index + 0] = normal[0];
+		vertices[offset_to_normals + 3 * first_index + 1] = normal[1];
+		vertices[offset_to_normals + 3 * first_index + 2] = normal[2];
+
+		vertices[offset_to_normals + 3 * second_index + 0] = normal[0];
+		vertices[offset_to_normals + 3 * second_index + 1] = normal[1];
+		vertices[offset_to_normals + 3 * second_index + 2] = normal[2];
+
+		vertices[offset_to_normals + 3 * third_index + 0] = normal[0];
+		vertices[offset_to_normals + 3 * third_index + 1] = normal[1];
+		vertices[offset_to_normals + 3 * third_index + 2] = normal[2];
+
+//		printf("vertices[%d] multily by 0\n", stride * first_index + 3);
+//		printf("vertices[%d] multily by 0\n", stride * first_index + 4);
+//		printf("vertices[%d] multily by 0\n", stride * first_index + 5);
+
+	}
+
+*/
+///////////////////////////////////////////////////////////////////////////
+//		THIS IS UPDATING BRIGHTNESS
+
+#if 0
+	for (int i = 0; i < vertices.size() / 9; i += 1)
+	{
+		float first_vertex[3];
+		first_vertex[0] = vertices[stride * i + 0];
+		first_vertex[1] = vertices[stride * i + 1];
+		first_vertex[2] = vertices[stride * i + 2];
+
+
+
+		float hitli[3];
+		hitli[0] = first_vertex[0] - 100;
+		hitli[1] = first_vertex[1] - 100;
+		hitli[2] = first_vertex[2] - 100;
+
+		float hitlilen = sqrt(hitli[0] * hitli[0] + hitli[1] * hitli[1] + hitli[2] * hitli[2]);
+
+		hitli[0] /= hitlilen;
+		hitli[1] /= hitlilen;
+		hitli[2] /= hitlilen;
+
+		double normal[3];
+
+		normal[0] = vertices[offset_to_normals + 3 * i + 0];
+		normal[1] = vertices[offset_to_normals + 3 * i + 1];	
+		normal[2] = vertices[offset_to_normals + 3 * i + 2];
+
+		
+		printf("normals is %f,%f,%f\n", normal[0], normal[1], normal[2]);	
+//		usleep(10000);
+		float bri;
+		bri = fmax(fabs(normal[0] * hitli[0] + normal[1] * hitli[1] + normal[2] * hitli[2]), 0.3);
+		printf("bri is %f\n", bri);
+//		if (bri < 0.5)
+//			bri = 1;
+		if (bri <= 0.3 )
+			printf("aaaaaaaaaaaaaaaaaaaaaa\n");
+
+//		bri = 0.8;
+
+
+		vertices[stride * i + 3] *= bri;
+		vertices[stride * i + 4] *= bri;
+		vertices[stride * i + 5] *= bri;
+
+		printf("updating normals\n");
+	}
+
+#endif
+
+		glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), &vertices[0], GL_DYNAMIC_DRAW);
+}
+
+void	Model::createNormals()
+{
+	for (int i = 0; i < vertex_indices.size(); i = i + 3)
+	{
+		int first_index =  vertex_indices[i];
+		int second_index = vertex_indices[i + 1];
+		int third_index =   vertex_indices[i + 2];
+
+		float first_vertex[3];
+		first_vertex[0] = vertices[stride * vertex_indices[i] + 0];
+		first_vertex[1] = vertices[stride * vertex_indices[i] + 1];
+		first_vertex[2] = vertices[stride * vertex_indices[i] + 2];
+
+
+		float second_vertex[3];
+		second_vertex[0] = vertices[stride * vertex_indices[(i + 1)] + 0];
+		second_vertex[1] = vertices[stride * vertex_indices[(i + 1)] + 1];
+		second_vertex[2] = vertices[stride * vertex_indices[(i + 1)] + 2];
+
+		float third_vertex[3];
+		third_vertex[0] = vertices[stride * vertex_indices[(i + 2)] + 0];
+		third_vertex[1] = vertices[stride * vertex_indices[(i + 2)] + 1];
+		third_vertex[2] = vertices[stride * vertex_indices[(i + 2)] + 2];
+
+		float dif1[3];
+		dif1[0] = first_vertex[0] - second_vertex[0];
+		dif1[1] = first_vertex[1] - second_vertex[1];
+		dif1[2] = first_vertex[2] - second_vertex[2];
+
+		float dif2[3];
+		dif2[0] = first_vertex[0] - third_vertex[0];
+		dif2[1] = first_vertex[1] - third_vertex[1];
+		dif2[2] = first_vertex[2] - third_vertex[2];
+
+
+		float normal[3];
+//cross(dif1, dif2)
+		normal[0] = -(dif1[1] * dif2[2] - dif1[2] * dif2[1]);
+		normal[1] = -(dif1[2] * dif2[0] - dif1[0] * dif2[2]);
+		normal[2] = -(dif1[0] * dif2[1] - dif1[1] * dif2[0]);
+
+		float normallen = sqrt(normal[0] * normal[0] + normal[1] * normal[1] + normal[2] * normal[2]);
+
+		normal[0] /= normallen;
+		normal[1] /= normallen;
+		normal[2] /= normallen;
+
+//// may need for models that don't have normals
+
+//	may not need if
+		if (vertices[offset_to_normals + 3 * first_index + 0] == 0 &&
+		vertices[offset_to_normals + 3 * first_index + 1] == 0 &&
+		vertices[offset_to_normals + 3 * first_index + 2] == 0)
+		{
+		vertices[offset_to_normals + 3 * first_index + 0] = normal[0];
+		vertices[offset_to_normals + 3 * first_index + 1] = normal[1];
+		vertices[offset_to_normals + 3 * first_index + 2] = normal[2];
+		}
+		if (vertices[offset_to_normals + 3 * second_index + 0] == 0 &&
+		vertices[offset_to_normals + 3 * second_index + 1] == 0 &&
+		vertices[offset_to_normals + 3 * second_index + 2] == 0)
+		{
+		vertices[offset_to_normals + 3 * second_index + 0] = normal[0];
+		vertices[offset_to_normals + 3 * second_index + 1] = normal[1];
+		vertices[offset_to_normals + 3 * second_index + 2] = normal[2];
+		}
+		if (vertices[offset_to_normals + 3 * third_index + 0] == 0 &&
+		vertices[offset_to_normals + 3 * third_index + 1] == 0 &&
+		vertices[offset_to_normals + 3 * third_index + 2] == 0)
+		{
+		vertices[offset_to_normals + 3 * third_index + 0] = normal[0];
+		vertices[offset_to_normals + 3 * third_index + 1] = normal[1];
+		vertices[offset_to_normals + 3 * third_index + 2] = normal[2];
+		}
+
+//		printf("vertices[%d] multily by 0\n", stride * first_index + 3);
+//		printf("vertices[%d] multily by 0\n", stride * first_index + 4);
+//		printf("vertices[%d] multily by 0\n", stride * first_index + 5);
+
+	}
 }
 
 
 void	Model::pushBackNormals()
 {
-//	vertices.push_back(normals[normal_indices[0]]);
+
+//	if with color
+	stride = 6; 
 
 //#if 0
 	int i = 0;
@@ -747,19 +1069,16 @@ void	Model::pushBackNormals()
 
 //	int numberOfVertices = vertices.size() / 2;
 
-/*	while (j < vertexSize)
-	{
-		vertices.push_back(0.3f);
-		j++;
-	}
-*/
 	//i is an index of the vertex indices
-	printf("vertices count %lu\n", vertices.size() / 6);
+
+	printf("vertices count %lu\n", vertices.size() / stride);
 
 	//SEGFULTS HERE IF 12//1 type of faces
 	if (normals.size() == 0)
 	{
 		printf("no model normals\n");
+		vertices.resize(vertices.size() + vertices.size() / stride * 3);
+		createNormals();
 		return ;
 	}
 
@@ -770,26 +1089,12 @@ void	Model::pushBackNormals()
 		
 		if (vertex_indices[i] == j)
 		{
+			printf("j is %d\n", j);
+			printf("i is %d\n", i);
+			printf("normal indices size is %lu\n", normal_indices.size());
 			vertices.push_back(normals[6 * normal_indices[i]]);
 			vertices.push_back(normals[6 * normal_indices[i] + 1]);
 			vertices.push_back(normals[6 * normal_indices[i] + 2]);
-/*
-			vertices.push_back(normals[3 * normal_indices[i]]);
-			vertices.push_back(normals[3 * normal_indices[i] + 1]);
-			vertices.push_back(normals[3 * normal_indices[i] + 2]);
-			*/
-//			printf("normal vector is %f,%f,%f\n", normals[3 * normal_indices[i]],  normals[3 * normal_indices[i] + 1], normals[3 * normal_indices[i] + 2]);
-
-/*			printf("lenght2 is %f\n", normals[3 * normal_indices[i]] * 
-						normals[3 * normal_indices[i]] + 
-
-						normals[3 * normal_indices[i] + 1] *
- 						normals[3 * normal_indices[i] + 1] + 
-
-						normals[3 * normal_indices[i] + 2] * 
-						normals[3 * normal_indices[i] + 2]);
-
-*/
 			j++;
 			i = 0;
 			continue;
@@ -798,6 +1103,7 @@ void	Model::pushBackNormals()
 		//the connection with the the normal cannot be established. the search ends
 		i++;
 	}
+//	createNormals();
 	printf("added vectors %lu\n", vertices.size()/6 - 7752/6);
 //#endif
 }
@@ -818,36 +1124,47 @@ static void	free_double_pointer(char **explode)
 
 static void	loadVectors(std::vector<float> &vertices, char **explode)
 {
+	srand(time(0));
 	printf("after explode %s, %s, %s\n", explode[1], explode[2], explode[3]);
 
 	vertices.push_back(atof(explode[1]) * 1);
 	vertices.push_back(atof(explode[2]) * 1);
 	vertices.push_back(atof(explode[3]) * 1);
 
-	int r = 0,g = 0,b = 0;
+	float r = 0,g = 0,b = 0;
 
 	while (r == 0
 		&& g == 0
 		&& b == 0) //no black points
 
 	{
-		r = rand() % 2;
+			r = 1;
+			g = fmod((vertices.size() / 100.0), 1);
+			b = 0.5;
+
+/*		r = 0.5;
+		g = 0.5;
+		b = 1;
+*/
+/*		r = rand() % 2;
 		g = rand() % 2;
 		b = rand() % 2;
-
-//		r = g = b = 1;
-	}
+*/	}
 //uncomment return for colors
-	return ;
+//	return ;
 	vertices.push_back(r);
 	vertices.push_back(g);
 	vertices.push_back(b);
+
 }
 
 static void	loadIndices(char **explode, std::vector<unsigned int> &vertex_indices, std::vector<unsigned int> &normal_indices)
 {
 	printf("___________________\n");
-
+	//explode is the face line split by spaces
+	//explode[0] is the letter f
+	//exlode[] = {f, v/vt/vn, v/vt/vn, v/vt/vn}
+	//xindices = {v, vt, vn} 
 	char **xindices = ft_strsplit(explode[1], '/');
 	char **yindices = ft_strsplit(explode[2], '/'); 
 	char **zindices = ft_strsplit(explode[3], '/');
@@ -857,34 +1174,41 @@ static void	loadIndices(char **explode, std::vector<unsigned int> &vertex_indice
 	vertex_indices.push_back(atoi(yindices[0]) - 1);
 	vertex_indices.push_back(atoi(zindices[0]) - 1);
 
-	if (xindices[1] && xindices[2]) //check if there is 2 / /
+	if (xindices[1]) //check if there is something after vertex indices
 	{
 		printf("push normal indices\n");
-/*		normal_indices.push_back(atoi(xindices[2]) - 1);
-		normal_indices.push_back(atoi(yindices[2]) - 1);
-		normal_indices.push_back(atoi(zindices[2]) - 1);
-*/
+		int index = 2;
+		if (!xindices[2]) //if v//vn
+			index = 1;
+		normal_indices.push_back(atoi(xindices[index]) - 1);
+		normal_indices.push_back(atoi(yindices[index]) - 1);
+		normal_indices.push_back(atoi(zindices[index]) - 1);
 	}
 	if (explode[4])
 	{
+		printf("the answer to why explode 4 is possible\n");
 		char **windices = ft_strsplit(explode[4], '/');
 
 		vertex_indices.push_back(atoi(xindices[0]) - 1);
 		vertex_indices.push_back(atoi(zindices[0]) - 1);
 		vertex_indices.push_back(atoi(windices[0]) - 1);
 
-		if (xindices[1] && xindices[2]) //check if there is 2 / /
+		if (xindices[1]) //check if there is 2
 		{
-/*			normal_indices.push_back(atoi(xindices[2]) - 1);
-			normal_indices.push_back(atoi(zindices[2]) - 1);
-			normal_indices.push_back(atoi(windices[2]) - 1);
-*/
+			int index = 2;
+			if (!xindices[2]) //if v//vn
+				index = 1;
+			// normals may be written into indices[1] if the texture indices are missing
+			normal_indices.push_back(atoi(xindices[index]) - 1);
+			normal_indices.push_back(atoi(zindices[index]) - 1);
+			normal_indices.push_back(atoi(windices[index]) - 1);
 		}
 		free_double_pointer(windices);
 	}
 	free_double_pointer(xindices);	
 	free_double_pointer(yindices);	
 	free_double_pointer(zindices);
+	printf("DONE LOADING INDICES\n");
 }
 
 void	Model::loadData(char *path)
@@ -901,8 +1225,8 @@ void	Model::loadData(char *path)
 		{
 			explode = ft_strsplit(line.c_str(), ' ');
 //this will load colors to normals from loadVertices
-//			if (strcmp(explode[0], "vn") == 0)
-//				loadVectors(normals, explode);
+			if (strcmp(explode[0], "vn") == 0)
+				loadVectors(normals, explode);
 			if (strcmp(explode[0], "v") == 0)
 				loadVectors(vertices, explode);
 			else if (strcmp(explode[0], "f") == 0)
@@ -910,9 +1234,15 @@ void	Model::loadData(char *path)
 			free_double_pointer(explode);
 		}
 	}
-	offset_to_normals = vertices.size() * sizeof(float);
-//NO NORMAS FOR NOW
-//	pushBackNormals();
+
+//	normals will be pushed to the end of the vertices vector
+//	vector[offset_to_normals + 0] is the x coordinate of the first normal
+	offset_to_normals = vertices.size();
+	printf("pushing back normals\n");
+
+//	Will create normals if normals.size() == 0
+	pushBackNormals();
+
 	printf("file read\n");
 }
 
@@ -935,8 +1265,6 @@ void	Model::initBuffers()
 //	_BUFFER. GL_STATIC_DRAW is specified for optimization. could be DYNAMIC (data changes), could be STREAM (data is used not a lot)
 	glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), &vertices[0], GL_STATIC_DRAW);
 
-
-
 	if (vertex_indices.size())
 	{
 		printf("Drawing according to indices\n");
@@ -944,58 +1272,32 @@ void	Model::initBuffers()
 		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * vertex_indices.size(), &vertex_indices[0], GL_STATIC_DRAW);
 	}
 
+
+
 		//because vec3			//how many bytes in a line/line = 1 vertex
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void *) 0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void *) 0);
 	glEnableVertexAttribArray(0); // 0 = location of the vertex attribute
+
 // color  //how much does location = 1 take space in a line			  //offset for the second location
-
-
-/*	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void *) (3 * sizeof(float)));
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void *) (3 * sizeof(float)));
 	glEnableVertexAttribArray(1); // 1 = location of the vertex attribute
 
-//add normals for this
-
-	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void *)offset_to_normals);
+//	add normals for this
+	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void *)(offset_to_normals * sizeof(float)));
 	glEnableVertexAttribArray(2);
-*/
+
 	printf("Buffers enabled\n");
 }
 
 
 void	Model::draw()
 {
-	if (vertex_indices.size())
-	{
-		numberoffloats = vertex_indices.size(); 
-		printf("numberoffloats is %d\n", numberoffloats);
+	if ((numberoffloats = vertex_indices.size()))
 		glDrawElements(GL_TRIANGLES, round(numberoffloats), GL_UNSIGNED_INT, 0);
-	}
 	else
 	{
 		numberoffloats = vertices.size();
 		glDrawArrays(GL_TRIANGLES, 0, round(numberoffloats));
-	}
-
-}
-
-
-
-
-void	printOpbject(Model &myModel)
-{
-	printf("vertices!\n");
-	int i = 0;
-	auto iter = myModel.vertices.begin();
-	auto end = myModel.vertices.end();
-
-	while (iter != end)
-	{
-		printf("%f, ", *iter);
-
-		if ((i + 1) % 3 == 0)
-			printf("\n");
-		iter++;
-		i++;
 	}
 }
 
@@ -1094,10 +1396,13 @@ public:
 //		GLFW is a library that manages operation system specific tasks, that OpenGL
 //		abstracts itself from. GLFW implements the specifications of OpenGL. It allows
 //		us to create window context, manage user input, define window parameters.
+
+//		this causes a leak
 		glfwInit();
+
 		glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
 		glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-
+	
 //		must do in mac, othrwise window == NULL
 		glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
@@ -1105,13 +1410,13 @@ public:
 //		Profile = core. Unlike Immediate mode, core profile is harder to use but allows for more flexibility
 //		Immediate mode hides functionality behind curtains
 		glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-
+	
 
 //		this function returns window object. inside this object
 //		will be all the windowing data. it will be used by other functions
-		width = height = 600;
+		width = height = 700;
 		window = glfwCreateWindow(width, height, "Learn OpenGL", NULL, NULL);
-
+	
 		if (window == NULL)
 		{
 			glfwTerminate();
@@ -1141,8 +1446,8 @@ public:
 		glfwSetCursorPosCallback(window, cursor_position_callback);
 		glfwSetKeyCallback(window, key_callback);	
 
+		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-
 	}
 	GLFWwindow *window;
 	int width;
@@ -1173,7 +1478,7 @@ public:
 };
 
 Camera cam;
-
+mat4 matrix;
 
 int	main(int argc, char **argv)
 {
@@ -1182,14 +1487,43 @@ int	main(int argc, char **argv)
 		return (0);
 	}
 
+
 	OpenGL	opengl;
 	Model	myModel;
+
 	myModel.loadData(argv[1]);
 	myModel.initBuffers();
 	myModel.initConections();
-	std::vector<const char *>shaders{vertexShaderSource, fragmentShaderSource, geometryShaderSource1};
+//#if 0
+	std::vector<const char *>shaders{vertexShaderSource, fragmentShaderSource/*, geometryShaderSource1*/};
+
+//#endif
+
+
+//	This will draw normals. To use this also uncomment uniform variables and glUseProgram in 
+//	loop
+/*
+	std::vector<const char *>normalShaders{vertexShaderSourceNormal, fragmentShaderSourceNormal, geometryShaderSourceNormal};
+	Shader normalShader(normalShaders);
+*/
+
+
 	Shader myShader(shaders);
 	printf("shaders compiled\n");
+
+	mat4 translate;
+
+
+	translate[3] = -cam.pos[0];
+	translate[7] = -cam.pos[1];
+	translate[11] = -cam.pos[2];
+
+	mat4 b =  cam.xRotate * cam.yRotate;
+	mat4 c = projectionMatrix * b * translate;  
+
+	matrix = c;
+
+
 	while (!glfwWindowShouldClose(opengl.window))
 	{
 
@@ -1203,58 +1537,32 @@ int	main(int argc, char **argv)
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 //start setting up uniform variable
 
-		int newVertexLocation = glGetUniformLocation(myShader.ID, "yRotate");
-		glUniformMatrix4fv(newVertexLocation, 1, GL_TRUE, cam.yRotate);
-
-		int newVertexLocation2 = glGetUniformLocation(myShader.ID, "xRotate");
-		glUniformMatrix4fv(newVertexLocation2, 1, GL_TRUE, cam.xRotate);
+		int campos = glGetUniformLocation(myShader.ID, "p");
+		glUniform4f(campos, cam.pos[0], cam.pos[1], cam.pos[2], cam.pos[3]);
 
 
-		int newVertexLocation1 = glGetUniformLocation(myShader.ID, "P");
-		glUniformMatrix4fv(newVertexLocation1, 1, GL_TRUE, projectionMatrix);
+		int wholematrix = glGetUniformLocation(myShader.ID, "matrix");
+		glUniformMatrix4fv(wholematrix, 1, GL_TRUE, matrix);
 
-		mat4 translate;
-
-
-		translate[3] = -cam.pos[0];
-		translate[7] = -cam.pos[1];
-		translate[11] = -cam.pos[2];
-
-		int newVertexLocation6 = glGetUniformLocation(myShader.ID, "translate");
-		glUniformMatrix4fv(newVertexLocation6, 1, GL_TRUE, translate);
-		mat4 b =  cam.xRotate * cam.yRotate;
-		mat4 c = projectionMatrix * b * translate;  
-
-		mat4 matrix = c;
-
-		int newVertexLocation7 = glGetUniformLocation(myShader.ID, "matrix");
-		glUniformMatrix4fv(newVertexLocation7, 1, GL_TRUE, matrix);
-
-		int newVertexLocation8 = glGetUniformLocation(myShader.ID, "Rotate");
-		glUniformMatrix4fv(newVertexLocation8, 1, GL_TRUE, b);
-
-
-
-
-		int newVertexLocation5 = glGetUniformLocation(myShader.ID, "p");
-		glUniform4f(newVertexLocation5, cam.pos[0], cam.pos[1], cam.pos[2], cam.pos[3]);
 
 		glUseProgram(myShader.ID);
-
-
 		// this draws according to indices, or 1 after 1, depending on indices.size()
-		printf("drawing\n");
 		myModel.draw();
 
+/*		glUniform4f(campos, cam.pos[0], cam.pos[1], cam.pos[2], cam.pos[3]);
+		glUniformMatrix4fv(wholematrix, 1, GL_TRUE, matrix);
+
+		glUseProgram(normalShader.ID);
+		myModel.draw();
+*/
 		glfwSwapBuffers(opengl.window);
 		glfwPollEvents();
 	}
 	glDeleteVertexArrays(1, &myModel.VAO);
 	glDeleteBuffers(1, &myModel.VBO);
 
-	if (argc == 2)
-//		delete object;
 	system("leaks -q a.out");
+
 	// glfw: terminate, clearing all previously allocated GLFW resources.
 	// ------------------------------------------------------------------
 
@@ -1321,6 +1629,21 @@ void	key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 		std::cout << "unknown key" << std::endl;
 //	printf("cam.pos is %f, %f, %f, %f\n", cam.pos[0], cam.pos[1], cam.pos[2], cam.pos[3]);
 //	printf("normal is %f, %f, %f, %f\n", difz[0], difz[1], difz[2], difz[3]);
+////////////////////////////////////
+	mat4 translate;
+
+
+	translate[3] = -cam.pos[0];
+	translate[7] = -cam.pos[1];
+	translate[11] = -cam.pos[2];
+
+
+
+	mat4 b =  cam.xRotate * cam.yRotate;
+	mat4 c = projectionMatrix * b * translate;  
+
+	matrix = c;
+
 
 }
 
@@ -1367,6 +1690,20 @@ void cursor_position_callback(GLFWwindow* window, double x, double y)
 	cam.xRotate[6] = -sin(y);
 	cam.xRotate[9] = sin(y);
 	cam.xRotate[10] = cos(y);
+/////////////////////////////////////
+	mat4 translate;
+
+
+	translate[3] = -cam.pos[0];
+	translate[7] = -cam.pos[1];
+	translate[11] = -cam.pos[2];
+
+
+
+	mat4 b =  cam.xRotate * cam.yRotate;
+	mat4 c = projectionMatrix * b * translate;  
+
+	matrix = c;
 }
 
 
