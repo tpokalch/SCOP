@@ -1,8 +1,7 @@
 # SCOP
 
 
-Beware! Project under construction ahead.
-
+Self-congratulatory OpenGL project. Displaying a .obj model with lighting. Also added physics simulation of a model made of strings.
 
 
 <p align="center">

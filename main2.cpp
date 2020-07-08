@@ -810,9 +810,9 @@ void	Model::updateVertices()
 
 
 
-		speeds[i][0] += force[0] * 0.5;
-		speeds[i][1] += force[1] * 0.5;
-		speeds[i][2] += force[2] * 0.5;
+		speeds[i][0] += force[0] * 0.1;
+		speeds[i][1] += force[1] * 0.1;
+		speeds[i][2] += force[2] * 0.1;
 
 
 //		printf("length of force is %f\n", length_of_force);
@@ -833,9 +833,9 @@ void	Model::updateVertices()
 		int stridei = stride * i;
 
 
-		vertices[i * stride + 0] += speeds[i][0] * 0.5;
-		vertices[i * stride + 1] += speeds[i][1] * 0.5;
-		vertices[i * stride + 2] += speeds[i][2] * 0.5;
+		vertices[i * stride + 0] += speeds[i][0] * 0.1;
+		vertices[i * stride + 1] += speeds[i][1] * 0.1;
+		vertices[i * stride + 2] += speeds[i][2] * 0.1;
 
 /*
 		vertices[stridei + 0] += forces[i][0] * 0.01;
