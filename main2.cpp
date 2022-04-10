@@ -1437,7 +1437,9 @@ public:
 		glEnable(GL_DEPTH_TEST);
 
 //		this transforms 0,5 , 0.5 to 300, 300 behind the scenes
-		glViewport(0, 0, width, height);
+		int frameBufferWidth, frameBufferHeight;
+		glfwGetFramebufferSize(window, &frameBufferWidth, &frameBufferHeight);
+		glViewport(0, 0, frameBufferWidth, frameBufferHeight);
 
 //		this function is called every time the window is resized.
 //		we have to implement the framebuffer_size_callback func.
@@ -1530,7 +1532,7 @@ int	main(int argc, char **argv)
 ////////////////////////////////////////////////
 		// only after init conections
 		// will draw wave model
-		myModel.updateVertices();
+	//	myModel.updateVertices();
 /////////////////////////////////////////////////////////////
 		processInput(opengl.window);
 
